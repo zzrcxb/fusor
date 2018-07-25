@@ -36,3 +36,8 @@
 cmake-*/
 build/
 .idea/
+
+# Assembly
+*.s
+*.ll
+*.bc
