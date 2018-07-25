@@ -1,0 +1,8 @@
+//
+// Created by neil on 7/21/18.
+//
+
+#ifndef PROJECT_FUNC_SEARCHER_HPP
+#define PROJECT_FUNC_SEARCHER_HPP
+
+#endif //PROJECT_FUNC_SEARCHER_HPP

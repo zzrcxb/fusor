@@ -6,6 +6,7 @@
 *.lo
 *.o
 *.obj
+*.bc
 
 # Precompiled Headers
 *.gch
@@ -30,3 +31,8 @@
 *.exe
 *.out
 *.app
+
+# Build
+cmake-*/
+build/
+.idea/
