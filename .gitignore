@@ -41,3 +41,7 @@ build/
 *.s
 *.ll
 *.bc
+
+# Makefile
+Makefile
+makefile
