@@ -20,71 +20,31 @@ namespace {
         ArrayPass() : FunctionPass(ID) {}
 
         bool runOnFunction(Function &F) override {
-          vector<Instruction*> toBeDeleted;
-          Instruction *tobe = nullptr;
+          auto *DT = new DataLayout(F.getParent());
+          Type *i32 = Type::getInt32Ty(getGlobalContext());
+          for (auto &sv : search_symvar_declare(F)) {
+            ArrayType *aint = ArrayType::get(i32, 5);
+            ArrayType *at = ArrayType::get(sv.type->getElementType(), 5);
+            auto *fst_block = new AllocaInst(aint, "fst_array", sv.start_point);
+            auto *scd_block = new AllocaInst(at, "scd_array", sv.start_point);
 
-          for (auto p : search_symvar_declare(F)) {
-            errs() << p.first->getName() << "\t" << *p.second << "\n";
+            for (u_int64_t i = 0; i < 5; i++) {
+              Value* idx[2] = {ConstantInt::get(i32, 0), ConstantInt::get(i32, i)};
+              auto af = ArrayRef<Value*>(idx, (size_t)2);
+              auto *ptr = GetElementPtrInst::CreateInBounds(fst_block, af, "tt", sv.start_point);
+              auto *li = new StoreInst(ConstantInt::get(i32, i, true), ptr, sv.start_point);
+            }
+
+            errs() << "Size: " << DT->getTypeAllocSize(sv.type->getElementType()) << "\n";
+
+            Value* idx[2] = {ConstantInt::get(i32, 0), ConstantInt::get(i32, 2)};
+            auto af = ArrayRef<Value*>(idx, (size_t)2);
+            auto *ptr = GetElementPtrInst::CreateInBounds(scd_block, af, "ts", sv.start_point);
+            auto *val = new LoadInst(sv.var, "val", sv.start_point);
+            auto *store = new StoreInst(val, ptr, sv.start_point);
+
+            errs() << scd_block->getName() << "\t" << *scd_block->getType() << "\n";
           }
-
-//          for (auto p : search_symvar_func_call(F)) {
-//            Function *func = p.first;
-//            Instruction *I = p.second;
-//
-//            ImmutableCallSite ICS(I);
-//
-//            for (auto &arg : ICS.args()) {
-//              if (auto *inst = dyn_cast<BitCastInst>(arg)) {
-//                auto *target = inst->getOperand(0);
-//                auto *type = dyn_cast<PointerType>(target->getType());
-//                errs() << target->getName() << "\t" << *type << "\n";
-//              }
-//              else if (auto *inst = dyn_cast<AllocaInst>(arg)) {
-//                auto *target = dyn_cast<Value>(arg);
-//                auto *type = dyn_cast<PointerType>(target->getType());
-//                errs() << *target << "\t" << *type << "\n";
-//              }
-//            }
-//          }
-
-//          for (auto &B : F) {
-//            for (auto I = B.begin(); I != B.end(); ++I) {
-//              if (auto *ct = dyn_cast<CallInst>(I)) {
-//                if (ct->getCalledFunction()->getName() == SYMVAR_FUNC) {
-//
-//                  Function *func = ct->getCalledFunction();
-//                  auto *arg = dyn_cast<Value>(func->arg_begin());
-//
-//                  --I;
-//                  auto *ui = dyn_cast<UnaryInstruction>(I);
-//                  auto *target = ui->getOperand(0);
-//                  auto *t_t = dyn_cast<PointerType>(ui->getOperand(0)->getType());
-//
-//                  for (auto &u : arg->uses())
-//                    errs() << *u.getUser() << "\n=============\n";
-//
-//                  for (auto &u : target->uses())
-//                    errs() << *u.getUser() << "\n";
-//
-//                  errs() << target->getName() << "\t" << "\n";
-//                  ++I;
-//
-//                  Type *type = Type::getInt32Ty(getGlobalContext());
-//                  Instruction *ni = BinaryOperator::Create(Instruction::Add, ConstantInt::get(type, 4), ConstantInt::get(type, 4));
-//                  Instruction *ni2 = new StoreInst(ConstantInt::get(t_t->getElementType(), 11), target);
-//
-////                  I->getParent()->getInstList().insert(BasicBlock::iterator(*I), ni);
-//                  I->getParent()->getInstList().insert(BasicBlock::iterator(*I), ni2);
-//                  break;
-//                }
-//              }
-//            }
-//            if (tobe)
-//              break;
-//          }
-//
-//          if (tobe)
-//            tobe->eraseFromParent();
 
           errs() << "--------------\n" << F.getName() << "\n";
           F.dump();
