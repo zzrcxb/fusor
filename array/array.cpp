@@ -9,47 +9,184 @@
 #include "llvm/Transforms/Utils/BasicBlockUtils.h"
 #include "llvm/IR/CallSite.h"
 #include "func_searcher.hpp"
+#include <algorithm>
+#include <random>
+#include <chrono>
 
 using namespace std;
 using namespace llvm;
 
+
 namespace {
+    struct SymArrayGroup {
+        Value *fst_array, *scd_array, *fst_index, *scd_index;
+        SymArrayGroup(Value *fst_array, Value *scd_array, Value *fst_index, Value *scd_index)
+        : fst_array(fst_array), scd_array(scd_array), fst_index(fst_index), scd_index(scd_index) {}
+    };
+
     struct ArrayPass : public FunctionPass {
         static char ID;
 
         ArrayPass() : FunctionPass(ID) {}
 
         bool runOnFunction(Function &F) override {
-          auto *DT = new DataLayout(F.getParent());
-          Type *i32 = Type::getInt32Ty(getGlobalContext());
-          for (auto &sv : search_symvar_declare(F)) {
-            ArrayType *aint = ArrayType::get(i32, 5);
-            ArrayType *at = ArrayType::get(sv.type->getElementType(), 5);
-            auto *fst_block = new AllocaInst(aint, "fst_array", sv.start_point);
-            auto *scd_block = new AllocaInst(at, "scd_array", sv.start_point);
+          rand_engine.seed(++seed);
+          vector<Value*> sym_vars;
+          deque<BasicBlock*> BBs;
+          bool isFirst = true;
+          vector<SymArrayGroup> groups;
 
-            for (u_int64_t i = 0; i < 5; i++) {
-              Value* idx[2] = {ConstantInt::get(i32, 0), ConstantInt::get(i32, i)};
-              auto af = ArrayRef<Value*>(idx, (size_t)2);
-              auto *ptr = GetElementPtrInst::CreateInBounds(fst_block, af, "tt", sv.start_point);
-              auto *li = new StoreInst(ConstantInt::get(i32, i, true), ptr, sv.start_point);
+          for (auto &a : F.args())
+            sym_vars.emplace_back(&a);
+
+          for (auto &B : F)
+            BBs.emplace_back(&B);
+
+          while (!BBs.empty()) {
+            BasicBlock *B = BBs.front();
+            BasicBlock *originB = B->splitBasicBlock(B->getFirstNonPHIOrDbgOrLifetime(), "originB");
+
+            if (isFirst) {
+              groups = alloca_dyn_mem(B, sym_vars);
+              isFirst = false;
             }
 
-            errs() << "Size: " << DT->getTypeAllocSize(sv.type->getElementType()) << "\n";
-
-            Value* idx[2] = {ConstantInt::get(i32, 0), ConstantInt::get(i32, 2)};
-            auto af = ArrayRef<Value*>(idx, (size_t)2);
-            auto *ptr = GetElementPtrInst::CreateInBounds(scd_block, af, "ts", sv.start_point);
-            auto *val = new LoadInst(sv.var, "val", sv.start_point);
-            auto *store = new StoreInst(val, ptr, sv.start_point);
-
-            errs() << scd_block->getName() << "\t" << *scd_block->getType() << "\n";
+            BBs.pop_front();
           }
 
-          errs() << "--------------\n" << F.getName() << "\n";
-          F.dump();
+//          for (auto &sv : search_symvar_declare(F)) {
+//            ArrayType *aint = ArrayType::get(i32, DEFAULT_ARRAY_SIZE);
+//            auto *fst_block = new AllocaInst(aint, "fst_array", sv.start_point);
+//            auto *scd_block = new AllocaInst(aint, "scd_array", sv.start_point);
+//            vector<size_t> fst_index = intrange(DEFAULT_ARRAY_SIZE);
+//            shuffle(fst_index.begin(), fst_index.end(), default_random_engine(seed)); // Shuffle it
+//            vector<size_t> scd_index = intrange(DEFAULT_ARRAY_SIZE);
+//            shuffle(scd_index.begin(), scd_index.end(), default_random_engine(seed + 1));
+//
+//            // These can be replaced by llvm.memset
+//            for (u_int64_t i = 0; i < DEFAULT_ARRAY_SIZE; i++) {
+//              Value* idx[2] = {ConstantInt::get(i32, 0), ConstantInt::get(i32, i)};
+//              auto af = ArrayRef<Value*>(idx, (size_t)2);
+//              auto *ptr = GetElementPtrInst::CreateInBounds(fst_block, af, "ptr", sv.start_point);
+//              auto *li = new StoreInst(ConstantInt::get(i32, fst_index[i], true), ptr, sv.start_point);
+//            }
+//
+//            for (u_int64_t i = 0; i < DEFAULT_ARRAY_SIZE; i++) {
+//              Value* idx[2] = {ConstantInt::get(i32, 0), ConstantInt::get(i32, i)};
+//              auto af = ArrayRef<Value*>(idx, (size_t)2);
+//              auto *ptr = GetElementPtrInst::CreateInBounds(scd_block, af, "ptr", sv.start_point);
+//              auto *li = new StoreInst(ConstantInt::get(i32, -scd_index[i], true), ptr, sv.start_point);
+//            }
+//
+//            // Trunc symvar to char
+//            auto *trunc_p = new BitCastInst(sv.var, i8p, "casted", sv.start_point);
+//            auto *trunced = new LoadInst(trunc_p, "trunced.symvar", sv.start_point);
+//            auto *true_index = BinaryOperator::Create(Instruction::BinaryOps::SRem, trunced, ConstantInt::get(i8, DEFAULT_ARRAY_SIZE), "truci", sv.start_point);
+//            Value* idx[2] = {ConstantInt::get(i32, 0), trunced};
+//            auto af = ArrayRef<Value*>(idx, (size_t)2);
+//            auto *ptr = GetElementPtrInst::CreateInBounds(scd_block, af, "ptr", sv.start_point);
+//            auto *original = new LoadInst(ptr, "orgi", sv.start_point);
+//            auto *final_val = BinaryOperator::Create(Instruction::BinaryOps::Add, original, ConstantInt::get(i32, DEFAULT_ARRAY_SIZE), "res", sv.start_point);
+//            auto *store = new StoreInst(final_val, ptr, sv.start_point);
+//
+//            sv.delete_all();
+//          }
+
+          errs() << "===================\n" << F.getName() << "\n";
+          for (auto &B : F) {
+            errs() << "---------\n";
+            B.dump();
+          }
           return true;
         }
+
+    protected:
+        vector<size_t> awful_cpp_without_range(size_t start, size_t end) {
+          // End with end - 1
+          vector<size_t> res;
+          for (size_t i = start; i < end; i++)
+            res.emplace_back(i);
+          return res;
+        }
+
+        vector<size_t> intrange(size_t end) {
+          return awful_cpp_without_range(0, end);
+        }
+
+        vector<SymArrayGroup> alloca_dyn_mem(BasicBlock* BB, const vector<Value*> &sym_var) {
+          Instruction *insert_point = BB->getTerminator();
+          ArrayType *aint = ArrayType::get(i8, DEFAULT_ARRAY_SIZE);
+          vector<SymArrayGroup> res;
+          vector<Value*> real_sym_var_loc;
+
+          // Move argument allocation and initialization
+          for (auto *sv : sym_var) {
+            bool found = false;
+            for (auto &u : sv->uses()) {
+              if (auto *storeI = dyn_cast<StoreInst>(u.getUser())) {
+                if (auto *allocaI = dyn_cast<AllocaInst>(storeI->getOperand(1))) {
+                  allocaI->moveBefore(insert_point);
+                  storeI->moveBefore(insert_point);
+                  real_sym_var_loc.emplace_back(allocaI);
+                  found = true;
+                }
+              }
+            }
+            if (!found) { // Allocate arguments in case compiler gets some of them optimized. Not be tested!!!
+              auto *addr = new AllocaInst(sv->getType(), sv->getName(), insert_point);
+              real_sym_var_loc.emplace_back(addr);
+              new StoreInst(sv, addr, insert_point);
+            }
+          }
+
+          for (auto *sv : real_sym_var_loc) {
+            auto *fst_array = new AllocaInst(aint, "fst_array", insert_point);
+            auto *scd_array = new AllocaInst(aint, "scd_array", insert_point);
+            vector<size_t> fst_index = intrange(DEFAULT_ARRAY_SIZE);
+            shuffle(fst_index.begin(), fst_index.end(), rand_engine); // Shuffle it
+            vector<size_t> scd_index = intrange(DEFAULT_ARRAY_SIZE);
+            shuffle(scd_index.begin(), scd_index.end(), rand_engine); // Shuffle it
+
+            // These can be replaced by llvm.memset
+            for (u_int64_t i = 0; i < DEFAULT_ARRAY_SIZE; i++) {
+              Value* idx[2] = {ConstantInt::get(i8, 0), ConstantInt::get(i8, i)};
+              auto af = ArrayRef<Value*>(idx, (size_t)2);
+              auto *ptr1 = GetElementPtrInst::CreateInBounds(fst_array, af, "ptr1", insert_point);
+              new StoreInst(ConstantInt::get(i8, fst_index[i], true), ptr1, insert_point);
+              auto *ptr2 = GetElementPtrInst::CreateInBounds(scd_array, af, "ptr2", insert_point);
+              new StoreInst(ConstantInt::get(i8, -scd_index[i], true), ptr2, insert_point);
+            }
+
+            // Trunc symvar to char
+            auto *trunc_p = new BitCastInst(sv, i8p, "casted", insert_point);
+            auto *trunced = new LoadInst(trunc_p, "trunced.symvar", insert_point);
+            auto *true_index = BinaryOperator::Create(Instruction::BinaryOps::SRem, trunced, ConstantInt::get(i8, DEFAULT_ARRAY_SIZE), "truci", insert_point);
+
+            Value* idx[2] = {ConstantInt::get(i8, 0), trunced};
+            auto af = ArrayRef<Value*>(idx, (size_t)2);
+            auto *ptr1 = GetElementPtrInst::CreateInBounds(fst_array, af, "ptr1", insert_point);
+            auto *index2 = new LoadInst(ptr1, "index2", insert_point);
+
+            idx[1] = index2;
+            auto *ptr2 = GetElementPtrInst::CreateInBounds(scd_array, af, "ptr2", insert_point);
+            auto *original = new LoadInst(ptr2, "orgi", insert_point);
+            auto *final_val = BinaryOperator::Create(Instruction::BinaryOps::Add, original, ConstantInt::get(i8, DEFAULT_ARRAY_SIZE), "res", insert_point);
+            auto *store = new StoreInst(final_val, ptr2, insert_point);
+
+            res.emplace_back(SymArrayGroup(fst_array, scd_array, ptr1, ptr2));
+          }
+
+          return res;
+        }
+
+    private:
+        unsigned seed = static_cast<unsigned>(chrono::system_clock::now().time_since_epoch().count());
+        default_random_engine rand_engine;
+
+        const uint64_t DEFAULT_ARRAY_SIZE = 2;
+        Type *i32 = Type::getInt32Ty(getGlobalContext());
+        Type *i8 = Type::getInt8Ty(getGlobalContext());
+        Type *i8p = Type::getInt8PtrTy(getGlobalContext());
     };
 }
 
