@@ -16,12 +16,15 @@
 using namespace std;
 using namespace llvm;
 
+#define True true
+#define False false // For Python lovers!
+
 
 namespace {
     struct SymArrayGroup {
-        Value *fst_array, *scd_array, *fst_index, *scd_index;
-        SymArrayGroup(Value *fst_array, Value *scd_array, Value *fst_index, Value *scd_index)
-        : fst_array(fst_array), scd_array(scd_array), fst_index(fst_index), scd_index(scd_index) {}
+        Value *fst_array, *scd_array, *fst_index, *scd_index, *true_index;
+        SymArrayGroup(Value *fst_array, Value *scd_array, Value *fst_index, Value *scd_index, Value *true_index)
+        : fst_array(fst_array), scd_array(scd_array), fst_index(fst_index), scd_index(scd_index), true_index(true_index) {}
     };
 
     struct ArrayPass : public FunctionPass {
@@ -39,6 +42,9 @@ namespace {
           for (auto &a : F.args())
             sym_vars.emplace_back(&a);
 
+          if (sym_vars.empty())
+            return true;
+
           for (auto &B : F)
             BBs.emplace_back(&B);
 
@@ -50,6 +56,38 @@ namespace {
               groups = alloca_dyn_mem(B, sym_vars);
               isFirst = false;
             }
+
+            BasicBlock *bb = BasicBlock::Create(F.getContext(), "fake", &F);
+            B->getTerminator()->eraseFromParent();
+            vector<Value*> cmp_res;
+            for (auto g : groups) {
+              Value* idx[2] = {ConstantInt::get(i8, 0), g.true_index};
+              auto af = ArrayRef<Value*>(idx, (size_t)2);
+              auto *ptr1 = GetElementPtrInst::CreateInBounds(g.fst_array, af, "ptr1", B);
+              auto *index = new LoadInst(ptr1, "index", B);
+              idx[1] = index;
+              auto *ptr2 = GetElementPtrInst::CreateInBounds(g.scd_array, af, "ptr2", B);
+              auto *data = new LoadInst(ptr2, "data", B);
+              auto *cmp = new ICmpInst(*B, CmpInst::ICMP_SGT, data, ConstantInt::get(i8, 0), "res");
+              cmp_res.emplace_back(cmp);
+            }
+
+            auto *cmp = cmp_res.back();
+            cmp_res.pop_back();
+            while (!cmp_res.empty()) {
+              auto *rhs = cmp_res.back();
+              cmp_res.pop_back();
+              cmp = BinaryOperator::Create(Instruction::And, cmp, rhs, "cmp", B);
+            }
+
+            BranchInst::Create(originB, bb, cmp, B);
+
+            auto *tailB = originB->splitBasicBlock(--originB->end(), "tailB");
+            originB->getTerminator()->eraseFromParent();
+            BranchInst::Create(tailB, bb, cmp, originB);
+
+//            bb->getTerminator()->eraseFromParent();
+            BranchInst::Create(originB, bb);
 
             BBs.pop_front();
           }
@@ -162,7 +200,7 @@ namespace {
             auto *trunced = new LoadInst(trunc_p, "trunced.symvar", insert_point);
             auto *true_index = BinaryOperator::Create(Instruction::BinaryOps::SRem, trunced, ConstantInt::get(i8, DEFAULT_ARRAY_SIZE), "truci", insert_point);
 
-            Value* idx[2] = {ConstantInt::get(i8, 0), trunced};
+            Value* idx[2] = {ConstantInt::get(i8, 0), true_index};
             auto af = ArrayRef<Value*>(idx, (size_t)2);
             auto *ptr1 = GetElementPtrInst::CreateInBounds(fst_array, af, "ptr1", insert_point);
             auto *index2 = new LoadInst(ptr1, "index2", insert_point);
@@ -173,7 +211,7 @@ namespace {
             auto *final_val = BinaryOperator::Create(Instruction::BinaryOps::Add, original, ConstantInt::get(i8, DEFAULT_ARRAY_SIZE), "res", insert_point);
             auto *store = new StoreInst(final_val, ptr2, insert_point);
 
-            res.emplace_back(SymArrayGroup(fst_array, scd_array, ptr1, ptr2));
+            res.emplace_back(SymArrayGroup(fst_array, scd_array, ptr1, ptr2, true_index));
           }
 
           return res;
@@ -183,7 +221,7 @@ namespace {
         unsigned seed = static_cast<unsigned>(chrono::system_clock::now().time_since_epoch().count());
         default_random_engine rand_engine;
 
-        const uint64_t DEFAULT_ARRAY_SIZE = 2;
+        const uint64_t DEFAULT_ARRAY_SIZE = 10;
         Type *i32 = Type::getInt32Ty(getGlobalContext());
         Type *i8 = Type::getInt8Ty(getGlobalContext());
         Type *i8p = Type::getInt8PtrTy(getGlobalContext());
@@ -196,8 +234,8 @@ static RegisterPass<ArrayPass> X("array", "Array Pass", false, false);
 
 // Automatically enable the pass.
 // http://adriansampson.net/blog/clangpass.html
-// static void registerArrayPass(const PassManagerBuilder &, legacy::PassManagerBase &PM) {
-//     PM.add(new ArrayPass());
-// }
+//static void registerArrayPass(const PassManagerBuilder &, legacy::PassManagerBase &PM) {
+//    PM.add(new ArrayPass());
+//}
 //
-// static RegisterStandardPasses RegisterMyPass(PassManagerBuilder::EP_EarlyAsPossible, registerArrayPass);
+//static RegisterStandardPasses RegisterMyPass(PassManagerBuilder::EP_EarlyAsPossible, registerArrayPass);

@@ -3,11 +3,15 @@
 //
 
 #include <stdio.h>
-#include <cstdlib>
+#include <stdlib.h>
 //#include "example.h"
 
 
 int main(int argc, char **argv) {
   int test = argv[1][0] - '0';
-  int test2 = argc + 1;
+
+  if (test == 5)
+    return 0;
+  else
+    return 1;
 }
