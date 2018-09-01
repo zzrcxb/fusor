@@ -1,0 +1,2 @@
+This is the codes for RC4, one of the software stream cipher.
+Since RC4 generates a pseudorandom stream of bits, it can be used for encryption by combining it with the plaintext using bit-wise exclusive-or; decryption is perform the same way.

@@ -234,8 +234,8 @@ static RegisterPass<ArrayPass> X("array", "Array Pass", false, false);
 
 // Automatically enable the pass.
 // http://adriansampson.net/blog/clangpass.html
-//static void registerArrayPass(const PassManagerBuilder &, legacy::PassManagerBase &PM) {
-//    PM.add(new ArrayPass());
-//}
-//
-//static RegisterStandardPasses RegisterMyPass(PassManagerBuilder::EP_EarlyAsPossible, registerArrayPass);
+static void registerArrayPass(const PassManagerBuilder &, legacy::PassManagerBase &PM) {
+    PM.add(new ArrayPass());
+}
+
+static RegisterStandardPasses RegisterMyPass(PassManagerBuilder::EP_EarlyAsPossible, registerArrayPass);

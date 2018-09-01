@@ -1,0 +1,24 @@
+digraph "CFG for 'gmult' function" {
+	label="CFG for 'gmult' function";
+
+	Node0x55ce6281d6e0 [shape=record,label="{%0:\l  %1 = alloca i8, align 1\l  %2 = alloca i8, align 1\l  %p = alloca i8, align 1\l  %i = alloca i8, align 1\l  %hbs = alloca i8, align 1\l  store i8 %a, i8* %1, align 1\l  call void @llvm.dbg.declare(metadata i8* %1, metadata !63, metadata !64),\l... !dbg !65\l  store i8 %b, i8* %2, align 1\l  call void @llvm.dbg.declare(metadata i8* %2, metadata !66, metadata !64),\l... !dbg !67\l  call void @llvm.dbg.declare(metadata i8* %p, metadata !68, metadata !64),\l... !dbg !69\l  store i8 0, i8* %p, align 1, !dbg !69\l  call void @llvm.dbg.declare(metadata i8* %i, metadata !70, metadata !64),\l... !dbg !71\l  store i8 0, i8* %i, align 1, !dbg !71\l  call void @llvm.dbg.declare(metadata i8* %hbs, metadata !72, metadata !64),\l... !dbg !73\l  store i8 0, i8* %hbs, align 1, !dbg !73\l  store i8 0, i8* %i, align 1, !dbg !74\l  br label %3, !dbg !76\l}"];
+	Node0x55ce6281d6e0 -> Node0x55ce6281d730;
+	Node0x55ce6281d730 [shape=record,label="{%3:\l\l  %4 = load i8, i8* %i, align 1, !dbg !77\l  %5 = zext i8 %4 to i32, !dbg !77\l  %6 = icmp slt i32 %5, 8, !dbg !80\l  br i1 %6, label %7, label %43, !dbg !81\l|{<s0>T|<s1>F}}"];
+	Node0x55ce6281d730:s0 -> Node0x55ce6281d780;
+	Node0x55ce6281d730:s1 -> Node0x55ce6281d960;
+	Node0x55ce6281d780 [shape=record,label="{%7:\l\l  %8 = load i8, i8* %2, align 1, !dbg !82\l  %9 = zext i8 %8 to i32, !dbg !82\l  %10 = and i32 %9, 1, !dbg !85\l  %11 = icmp ne i32 %10, 0, !dbg !85\l  br i1 %11, label %12, label %19, !dbg !86\l|{<s0>T|<s1>F}}"];
+	Node0x55ce6281d780:s0 -> Node0x55ce6281d7d0;
+	Node0x55ce6281d780:s1 -> Node0x55ce6281d820;
+	Node0x55ce6281d7d0 [shape=record,label="{%12:\l\l  %13 = load i8, i8* %1, align 1, !dbg !87\l  %14 = zext i8 %13 to i32, !dbg !87\l  %15 = load i8, i8* %p, align 1, !dbg !89\l  %16 = zext i8 %15 to i32, !dbg !89\l  %17 = xor i32 %16, %14, !dbg !89\l  %18 = trunc i32 %17 to i8, !dbg !89\l  store i8 %18, i8* %p, align 1, !dbg !89\l  br label %19, !dbg !90\l}"];
+	Node0x55ce6281d7d0 -> Node0x55ce6281d820;
+	Node0x55ce6281d820 [shape=record,label="{%19:\l\l  %20 = load i8, i8* %1, align 1, !dbg !91\l  %21 = zext i8 %20 to i32, !dbg !91\l  %22 = and i32 %21, 128, !dbg !92\l  %23 = trunc i32 %22 to i8, !dbg !91\l  store i8 %23, i8* %hbs, align 1, !dbg !93\l  %24 = load i8, i8* %1, align 1, !dbg !94\l  %25 = zext i8 %24 to i32, !dbg !94\l  %26 = shl i32 %25, 1, !dbg !94\l  %27 = trunc i32 %26 to i8, !dbg !94\l  store i8 %27, i8* %1, align 1, !dbg !94\l  %28 = load i8, i8* %hbs, align 1, !dbg !95\l  %29 = icmp ne i8 %28, 0, !dbg !95\l  br i1 %29, label %30, label %35, !dbg !97\l|{<s0>T|<s1>F}}"];
+	Node0x55ce6281d820:s0 -> Node0x55ce6281d870;
+	Node0x55ce6281d820:s1 -> Node0x55ce6281d8c0;
+	Node0x55ce6281d870 [shape=record,label="{%30:\l\l  %31 = load i8, i8* %1, align 1, !dbg !98\l  %32 = zext i8 %31 to i32, !dbg !98\l  %33 = xor i32 %32, 27, !dbg !98\l  %34 = trunc i32 %33 to i8, !dbg !98\l  store i8 %34, i8* %1, align 1, !dbg !98\l  br label %35, !dbg !100\l}"];
+	Node0x55ce6281d870 -> Node0x55ce6281d8c0;
+	Node0x55ce6281d8c0 [shape=record,label="{%35:\l\l  %36 = load i8, i8* %2, align 1, !dbg !101\l  %37 = zext i8 %36 to i32, !dbg !101\l  %38 = ashr i32 %37, 1, !dbg !101\l  %39 = trunc i32 %38 to i8, !dbg !101\l  store i8 %39, i8* %2, align 1, !dbg !101\l  br label %40, !dbg !102\l}"];
+	Node0x55ce6281d8c0 -> Node0x55ce6281d910;
+	Node0x55ce6281d910 [shape=record,label="{%40:\l\l  %41 = load i8, i8* %i, align 1, !dbg !103\l  %42 = add i8 %41, 1, !dbg !103\l  store i8 %42, i8* %i, align 1, !dbg !103\l  br label %3, !dbg !105\l}"];
+	Node0x55ce6281d910 -> Node0x55ce6281d730;
+	Node0x55ce6281d960 [shape=record,label="{%43:\l\l  %44 = load i8, i8* %p, align 1, !dbg !106\l  ret i8 %44, !dbg !107\l}"];
+}

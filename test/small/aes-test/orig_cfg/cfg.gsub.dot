@@ -1,0 +1,5 @@
+digraph "CFG for 'gsub' function" {
+	label="CFG for 'gsub' function";
+
+	Node0x55ce62808b90 [shape=record,label="{%0:\l  %1 = alloca i8, align 1\l  %2 = alloca i8, align 1\l  store i8 %a, i8* %1, align 1\l  call void @llvm.dbg.declare(metadata i8* %1, metadata !63, metadata !64),\l... !dbg !65\l  store i8 %b, i8* %2, align 1\l  call void @llvm.dbg.declare(metadata i8* %2, metadata !66, metadata !64),\l... !dbg !67\l  %3 = load i8, i8* %1, align 1, !dbg !68\l  %4 = zext i8 %3 to i32, !dbg !68\l  %5 = load i8, i8* %2, align 1, !dbg !69\l  %6 = zext i8 %5 to i32, !dbg !69\l  %7 = xor i32 %4, %6, !dbg !70\l  %8 = trunc i32 %7 to i8, !dbg !68\l  ret i8 %8, !dbg !71\l}"];
+}

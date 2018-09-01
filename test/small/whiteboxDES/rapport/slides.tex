@@ -1,0 +1,324 @@
+\documentclass{beamer}
+
+\mode<presentation>
+{
+  \usetheme{default}      % or try Darmstadt, Madrid, Warsaw, ...
+  \usecolortheme{default} % or try albatross, beaver, crane, ...
+  \usefonttheme{default}  % or try serif, structurebold, ...
+  \setbeamertemplate{navigation symbols}{}
+  \setbeamertemplate{caption}[numbered]
+} 
+
+\usepackage[french]{babel}
+\usepackage[utf8x]{inputenc}
+\usepackage{fancyvrb}
+\usepackage{graphicx}
+\usepackage{url}
+
+\author{David Wong
+  \and Jacques Monin
+  \and Hugo Bonnin}
+
+\title{Implémentation et Analyse d'une White-box du DES}
+
+\institute{Université de Bordeaux}
+
+\date{2014}
+
+\begin{document}
+
+\begin{frame}
+  \titlepage
+\end{frame}
+
+
+% \begin{frame}{Plan}
+%   \tableofcontents
+% \end{frame}
+
+\section{A quoi ça sert ?}
+
+\begin{frame}{A quoi ça sert ?}
+
+  \begin{figure}[h]
+    \centering
+    \includegraphics[scale=0.6]{./images/kezako.jpg}
+  \end{figure}
+
+\end{frame}
+
+\subsection{Man In The Middle}
+
+\begin{frame}{Base de la cryptographie}
+
+  \begin{figure}[h]
+    \centering
+    \includegraphics[scale=0.50]{./images/alice_bob.png}
+  \end{figure}
+
+\end{frame}
+
+\subsection{Man At The End}
+
+\begin{frame}[fragile]{Man At The End}
+
+  \begin{Verbatim}[samepage=true]
+    .-----------------. 
+    |    ATTAQUANT    |
+    |  .-----------.  |  
+    |  |           |  |  
+    |  | PROGRAMME |  | 
+    |  |           |  | 
+    |  '-----------'  |
+    |                 |
+    '-----------------'
+  \end{Verbatim}
+\end{frame}
+
+\subsection{Exemples}
+
+\begin{frame}{Exemples}
+
+  \begin{figure}[h]
+    \centering
+    \includegraphics[scale=0.50]{./images/drms.png}
+  \end{figure}
+
+\end{frame}
+
+\section{Whitebox}
+
+\subsection{Définition}
+
+\begin{frame}{Définition}
+
+  \begin{figure}[h]
+    \centering
+    \includegraphics[scale=0.30]{./images/blackbox.png}
+  \end{figure}
+
+  \begin{figure}[h]
+    \centering
+    \includegraphics[scale=0.30]{./images/whitebox.png}
+  \end{figure}
+
+\end{frame}
+
+\subsection{DES}
+\begin{frame}{Algorithme DES}
+  \begin{itemize}
+  \item Le but est de transformer toutes ces opérations
+    \begin{figure}[h]
+      \centering
+      \includegraphics[scale=0.45]{./images/des_slides.png}
+      \label{fig:DES-round}
+    \end{figure}
+  \end{itemize}
+
+\end{frame}
+
+\subsection{Github}
+\begin{frame}{Github}
+  \begin{itemize}
+  \item DES : \url{www.github.com/mimoo/DES}
+  \item WHITEBOX-DES : \url{www.github.com/mimoo/whiteboxDES}
+  \end{itemize}
+
+  \begin{figure}[h]
+    \centering
+    \includegraphics[scale=0.30]{./images/github.png}
+  \end{figure}
+\end{frame}
+
+\section{Concepts}
+
+\subsection{Partial Evaluation}
+\begin{frame}{Partial evaluation}
+  \begin{itemize}
+  \item Regrouper le XOR entre le bloc et la clé avec l'opération de substitution.
+  \item On peut ensuite pré-calculer toutes les sorties possibles de cette opération.
+  \item Les tables créées sont les seules du programme à être modifiées lorsqu'une nouvelle clé est utilisée.
+  \end{itemize}
+\end{frame}
+
+
+\subsection{Tabularization}
+
+\begin{frame}[fragile]{Tabularization}
+  \begin{figure}[h]
+    \centering
+    \includegraphics[scale=0.60]{images/tabu.png}
+    \caption{Tabularisation}
+    \label{fig:keygen}
+  \end{figure}
+\end{frame}
+
+\begin{frame}{Transformation}
+  \begin{figure}[h]
+    \centering
+    \includegraphics[scale=0.20]{images/etape_1_avant.png}
+
+  \end{figure}
+
+  \begin{figure}[h]
+    \centering
+    \includegraphics[scale=0.20]{images/etape_1_apres.png}
+  \end{figure}
+\end{frame}
+
+
+\begin{frame}{Décomposition de Matrice}
+  \begin{figure}[h]
+    \centering
+    \includegraphics[scale=0.50]{images/decompo_matrice.png}
+    \caption{Décomposition de Matrice}
+    \label{fig:keygen}
+  \end{figure}
+\end{frame}
+
+\subsection{Input/Output Encoding}
+
+\begin{frame}{Input/Output Encoding}
+  \begin{figure}[h]
+    \centering
+    \includegraphics[scale=0.5]{images/encoding.png}
+    \caption{Encoding}
+    \label{fig:keygen}
+  \end{figure}
+\end{frame}
+
+\section{Concepts secondaires}
+
+\begin{frame}[fragile]{Concepts secondaires}
+  \begin{Verbatim}[samepage=true]
+    *********************************************
+    *              state 2 (96 bits)            *
+    *********************************************
+    |      |      |                       |
+    v      v      v          ...          v
+    
+    ?????????????????????????????????????????????
+    
+    |      |      |          ...          |
+    v      v      v                       v
+    *********************************************
+    *              state 3 (96 bits)            *
+    *********************************************
+  \end{Verbatim}
+\end{frame}
+
+\subsection{Randomization}
+
+\begin{frame}{Randomization}
+  \begin{figure}[h]
+    \centering
+    \includegraphics[scale=0.4]{./images/randomization.png}
+  \end{figure}
+\end{frame}
+
+\subsection{Mixing Bijection}
+
+\begin{frame}{Mixing Bijection}
+
+  \begin{center}
+
+    {\tiny
+      000000000000000000000000000000010000000000000000000000001000000000000000000000000000000000000000
+      100000000000000000000000000000000000000000000001000000000000000000000000000000000000000000000000
+      010000000000000000000000000000000000001000000000000000000000000000000000000000000000000000000000
+      001000000000000000000000000000000000000000000000000100000000000000000000000000000000000000000000
+      000100000000000000000000000000000000000000000000000010000000000000000000000000000000000000000000
+      000010000000000000000000000000000000000000000000000000000000100000000000000000000000000000000000
+      000100000000000000000000000000000000000000000000000010000000000000000000000000000000000000000000
+      000010000000000000000000000000000000000000000000000000000000100000000000000000000000000000000000
+      000001000000000000000000000000000000000000010000000000000000000000000000000000000000000000000000
+      000000100000000000000000000000000000000000000000000000000001000000000000000000000000000000000000
+      000000010000000000000000000000000000000000000000100000000000000000000000000000000000000000000000
+    }
+
+    $G^{-1} \cdot (G \cdot M_1)$ où $G \cdot M_1$
+  \end{center}
+
+\end{frame}
+
+\subsection{Bypass}
+
+\begin{frame}[fragile]{Bypass}
+  \begin{figure}[h]
+    \centering
+    \includegraphics[scale=0.4]{./images/state2.png}
+  \end{figure}
+
+  \begin{itemize}
+  \item On empêche l'identification facile des opérations
+  \item On rajoute des bits en entrée et en sortie
+  \end{itemize}
+
+\end{frame}
+
+
+\subsection{Combined Function Encoding}
+
+\begin{frame}{Combined Function}
+  \begin{figure}[h]
+    \centering
+    \includegraphics[scale=0.4]{./images/etape2.png}
+  \end{figure}
+  \begin{center}
+    $(P||Q)(input_P||input_Q)$.
+  \end{center}
+\end{frame}
+
+\subsection{Split-Path Encoding}
+
+\begin{frame}[fragile]{Split-Path Encoding}
+  \begin{Verbatim}[samepage=true]
+    Entrée                 S-box              Sortie
+                   .--------------------.
+    0011||0010 --> |...| 0011||0010 |...|
+                   |----------------|---|
+                   |...|    0001    |...| --> 0001
+                   '--------------------'
+                             | 
+                             v
+                   .--------------------.
+    0011||0010 --> |...| 0011||0010 |...|
+                   |----------------|---|
+                   |...| 0001||xxxx |...| --> 0001||1001
+                   '--------------------'
+  \end{Verbatim}
+  
+\end{frame}
+
+\subsection{External Encoding}
+
+\begin{frame}{External Encoding}
+
+  \begin{center}
+    \begin{itemize}
+    \item Appliquer deux bijections à l'entrée et la sortie de DES
+    \item $Whitebox = E \circ DES(input) \circ G$
+    \end{itemize}
+  \end{center}
+
+\end{frame}
+
+\section{Conclusion}
+
+\begin{frame}{Conclusion}
+  
+  \begin{itemize}
+  \item Beaucoup d'effort pour d'autres solutions (API, clés publiques)
+  \item Taille importante
+  \item La non-connaissance des algorithmes est ``trop'' importante.
+  \item Utilisé profesionnellement
+  \end{itemize}
+
+  \begin{figure}[h]
+    \centering
+    \includegraphics[scale=0.6]{./images/conclusion.png}
+  \end{figure}
+
+\end{frame}
+
+\end{document}
