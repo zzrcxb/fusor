@@ -42,3 +42,7 @@ build/
 *.ll
 *.bc
 
+# CFG
+.dot
+.jpg
+.png
