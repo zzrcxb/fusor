@@ -1,6 +1,6 @@
 CC = clang
-SO_PATH = /home/neil/fusor_new/build/array/libArrayPass.so
-CC_FLAG = -Xclang -load -Xclang $(SO_PATH) -g
+SO_PATH = ../../../build/array/libArrayPass.so
+CC_FLAG = -Xclang -load -Xclang $(SO_PATH)
 
 all: aes aes_fusor 
 
@@ -13,3 +13,4 @@ aes_fusor: aes.c
 clean:
 	rm -f aes aes_fusor
 	rm -f aes_stdout aes_fusor_stdout
+	rm -f *.ll *.bc *.s *.o *.out

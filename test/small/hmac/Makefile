@@ -1,5 +1,5 @@
 CC = clang
-SO_PATH = /home/neil/fusor/build/array/libArrayPass.so
+SO_PATH = ../../../build/array/libArrayPass.so
 CC_FLAG = -Xclang -load -Xclang $(SO_PATH)
 
 all: hmac hmac_fusor
@@ -24,4 +24,6 @@ sha2.o_fusor: sha2.c sha2.h
 	$(CC) $(CC_FLAG) -g -c sha2.c -o sha2.o
 
 clean:
-	- rm -rf *.o hmac
+	rm -f hmac hmac_fusor
+	rm -f hmac_stdout hmac_fusor_stdout
+	rm -f *.ll *.s *.bc *.o *.out

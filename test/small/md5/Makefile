@@ -1,5 +1,5 @@
 CC = clang
-SO_PATH = /home/neil/fusor/build/array/libArrayPass.so
+SO_PATH = ../../../build/array/libArrayPass.so
 CC_FLAG = -Xclang -load -Xclang $(SO_PATH)
 
 all: md5 md5_fusor
@@ -17,4 +17,6 @@ md5.o_fusor: md5.c
 	$(CC) $(CC_FLAG) -Wall -DTEST_VECTORS -c $<
 
 clean:
-	- rm -rf *.o md5 
+	rm -f md5 md5_fusor
+	rm -f md5_stdout md5_fusor_stdout
+	rm -f *.ll *.bc *.s *.o *.out

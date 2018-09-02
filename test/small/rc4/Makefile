@@ -1,5 +1,5 @@
 CC = clang
-SO_PATH = /home/neil/fusor_new/build/array/libArrayPass.so
+SO_PATH = ../../../build/array/libArrayPass.so
 CC_FLAG = -Xclang -load -Xclang $(SO_PATH)
 
 all: rc4 rc4_fusor
@@ -11,4 +11,6 @@ rc4_fusor: rc4.c
 	$(CC) $(CC_FLAG) rc4.c -o rc4_fusor 
 
 clean:
-	rm -rf *.o test
+	rm -f rc4 rc4_fusor
+	rm -f rc4_stdout rc4_fusor_stdout
+	rm -f *.ll *.o *.bc *.s *.out

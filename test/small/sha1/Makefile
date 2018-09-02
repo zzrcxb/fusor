@@ -1,6 +1,6 @@
 CC = clang
-SO_PATH = /home/neil/fusor/build/array/libArrayPass.so
-CC_FLAG = -Xclang -load -Xclang $(SO_PATH) -g
+SO_PATH = ../../../build/array/libArrayPass.so
+CC_FLAG = -Xclang -load -Xclang $(SO_PATH)
 
 all: sha1 sha1_fusor
 
@@ -11,4 +11,6 @@ sha1_fusor: main.c sha1.c rtlib.c
 	$(CC) $(CC_FLAG) main.c sha1.c rtlib.c -lpthread -o sha1_fusor
 
 clean:
-	- rm -rf *.o sha1 
+	rm -f sha1 sha1_fusor
+	rm -f sha1_stdout sha1_fusor_stdout
+	rm -f *.ll *.bc *.o *.s *.out
