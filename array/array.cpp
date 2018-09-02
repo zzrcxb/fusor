@@ -158,10 +158,11 @@ namespace {
             }
 
             // Trunc symvar to char
-//            auto *trunc_p = new BitCastInst(sv, i8p, "casted", insert_point);
-//            auto *trunced = new LoadInst(trunc_p, "trunced.symvar", insert_point);
-            auto *trunced = ConstantInt::get(i8, 6);
-            auto *true_index = BinaryOperator::Create(Instruction::BinaryOps::SRem, trunced, ConstantInt::get(i8, DEFAULT_ARRAY_SIZE), "truci", insert_point);
+            auto *trunc_p = new BitCastInst(sv, i8p, "casted", insert_point);
+            auto *trunced = new LoadInst(trunc_p, "trunced.symvar", insert_point);
+            auto *fixed = BinaryOperator::Create(Instruction::BinaryOps::And, trunced, ConstantInt::get(i8, 0x7F), "bug_fix", insert_point);
+//            auto *trunced = ConstantInt::get(i8, 6);
+            auto *true_index = BinaryOperator::Create(Instruction::BinaryOps::SRem, fixed, ConstantInt::get(i8, DEFAULT_ARRAY_SIZE), "truci", insert_point);
             Value* idx[2] = {ConstantInt::get(i8, 0), true_index};
             auto af = ArrayRef<Value*>(idx, (size_t)2);
             auto *ptr1 = GetElementPtrInst::CreateInBounds(fst_array, af, "ptr1", insert_point);
