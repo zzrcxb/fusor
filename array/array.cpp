@@ -39,6 +39,8 @@ namespace {
           bool isFirst = true;
           vector<SymArrayGroup> groups;
 
+          errs() << "===================\n" << F.getName() << "\n";
+
           for (auto &a : F.args())
             sym_vars.emplace_back(&a);
 
@@ -54,6 +56,7 @@ namespace {
 
             if (isFirst) {
               groups = alloca_dyn_mem(B, sym_vars);
+//              move_alloca_front(F);
               isFirst = false;
             }
 
@@ -79,6 +82,7 @@ namespace {
               cmp_res.pop_back();
               cmp = BinaryOperator::Create(Instruction::And, cmp, rhs, "cmp", B);
             }
+//            auto* cmp = BinaryOperator::Create(Instruction::And, ConstantInt::get(i8, 1), ConstantInt::get(i8, 1), "cmp", B);
 
             BranchInst::Create(originB, bb, cmp, B);
 
@@ -88,53 +92,11 @@ namespace {
 
 //            bb->getTerminator()->eraseFromParent();
             BranchInst::Create(originB, bb);
-
+//            auto *ret = BinaryOperator::Create(Instruction::Xor, cmp, ConstantInt::get(i1, 1), "cmp", bb);
+//            ReturnInst::Create(getGlobalContext(), ret, bb);
             BBs.pop_front();
           }
 
-//          for (auto &sv : search_symvar_declare(F)) {
-//            ArrayType *aint = ArrayType::get(i32, DEFAULT_ARRAY_SIZE);
-//            auto *fst_block = new AllocaInst(aint, "fst_array", sv.start_point);
-//            auto *scd_block = new AllocaInst(aint, "scd_array", sv.start_point);
-//            vector<size_t> fst_index = intrange(DEFAULT_ARRAY_SIZE);
-//            shuffle(fst_index.begin(), fst_index.end(), default_random_engine(seed)); // Shuffle it
-//            vector<size_t> scd_index = intrange(DEFAULT_ARRAY_SIZE);
-//            shuffle(scd_index.begin(), scd_index.end(), default_random_engine(seed + 1));
-//
-//            // These can be replaced by llvm.memset
-//            for (u_int64_t i = 0; i < DEFAULT_ARRAY_SIZE; i++) {
-//              Value* idx[2] = {ConstantInt::get(i32, 0), ConstantInt::get(i32, i)};
-//              auto af = ArrayRef<Value*>(idx, (size_t)2);
-//              auto *ptr = GetElementPtrInst::CreateInBounds(fst_block, af, "ptr", sv.start_point);
-//              auto *li = new StoreInst(ConstantInt::get(i32, fst_index[i], true), ptr, sv.start_point);
-//            }
-//
-//            for (u_int64_t i = 0; i < DEFAULT_ARRAY_SIZE; i++) {
-//              Value* idx[2] = {ConstantInt::get(i32, 0), ConstantInt::get(i32, i)};
-//              auto af = ArrayRef<Value*>(idx, (size_t)2);
-//              auto *ptr = GetElementPtrInst::CreateInBounds(scd_block, af, "ptr", sv.start_point);
-//              auto *li = new StoreInst(ConstantInt::get(i32, -scd_index[i], true), ptr, sv.start_point);
-//            }
-//
-//            // Trunc symvar to char
-//            auto *trunc_p = new BitCastInst(sv.var, i8p, "casted", sv.start_point);
-//            auto *trunced = new LoadInst(trunc_p, "trunced.symvar", sv.start_point);
-//            auto *true_index = BinaryOperator::Create(Instruction::BinaryOps::SRem, trunced, ConstantInt::get(i8, DEFAULT_ARRAY_SIZE), "truci", sv.start_point);
-//            Value* idx[2] = {ConstantInt::get(i32, 0), trunced};
-//            auto af = ArrayRef<Value*>(idx, (size_t)2);
-//            auto *ptr = GetElementPtrInst::CreateInBounds(scd_block, af, "ptr", sv.start_point);
-//            auto *original = new LoadInst(ptr, "orgi", sv.start_point);
-//            auto *final_val = BinaryOperator::Create(Instruction::BinaryOps::Add, original, ConstantInt::get(i32, DEFAULT_ARRAY_SIZE), "res", sv.start_point);
-//            auto *store = new StoreInst(final_val, ptr, sv.start_point);
-//
-//            sv.delete_all();
-//          }
-
-          errs() << "===================\n" << F.getName() << "\n";
-          for (auto &B : F) {
-            errs() << "---------\n";
-            B.dump();
-          }
           return true;
         }
 
@@ -152,7 +114,7 @@ namespace {
         }
 
         vector<SymArrayGroup> alloca_dyn_mem(BasicBlock* BB, const vector<Value*> &sym_var) {
-          Instruction *insert_point = BB->getTerminator();
+          Instruction *insert_point = dyn_cast<Instruction>(BB->begin());
           ArrayType *aint = ArrayType::get(i8, DEFAULT_ARRAY_SIZE);
           vector<SymArrayGroup> res;
           vector<Value*> real_sym_var_loc;
@@ -181,9 +143,9 @@ namespace {
             auto *fst_array = new AllocaInst(aint, "fst_array", insert_point);
             auto *scd_array = new AllocaInst(aint, "scd_array", insert_point);
             vector<size_t> fst_index = intrange(DEFAULT_ARRAY_SIZE);
-            shuffle(fst_index.begin(), fst_index.end(), rand_engine); // Shuffle it
+//            shuffle(fst_index.begin(), fst_index.end(), rand_engine); // Shuffle it
             vector<size_t> scd_index = intrange(DEFAULT_ARRAY_SIZE);
-            shuffle(scd_index.begin(), scd_index.end(), rand_engine); // Shuffle it
+//            shuffle(scd_index.begin(), scd_index.end(), rand_engine); // Shuffle it
 
             // These can be replaced by llvm.memset
             for (u_int64_t i = 0; i < DEFAULT_ARRAY_SIZE; i++) {
@@ -196,10 +158,10 @@ namespace {
             }
 
             // Trunc symvar to char
-            auto *trunc_p = new BitCastInst(sv, i8p, "casted", insert_point);
-            auto *trunced = new LoadInst(trunc_p, "trunced.symvar", insert_point);
+//            auto *trunc_p = new BitCastInst(sv, i8p, "casted", insert_point);
+//            auto *trunced = new LoadInst(trunc_p, "trunced.symvar", insert_point);
+            auto *trunced = ConstantInt::get(i8, 6);
             auto *true_index = BinaryOperator::Create(Instruction::BinaryOps::SRem, trunced, ConstantInt::get(i8, DEFAULT_ARRAY_SIZE), "truci", insert_point);
-
             Value* idx[2] = {ConstantInt::get(i8, 0), true_index};
             auto af = ArrayRef<Value*>(idx, (size_t)2);
             auto *ptr1 = GetElementPtrInst::CreateInBounds(fst_array, af, "ptr1", insert_point);
@@ -217,12 +179,32 @@ namespace {
           return res;
         }
 
+        void move_alloca_front(Function &F) {
+            auto *insert_point = dyn_cast<Instruction>(dyn_cast<BasicBlock>(F.begin())->begin());
+            vector<Instruction*> allocas;
+
+            errs() << *insert_point << "\n";
+            for (auto &B : F) {
+                for (auto &I : B) {
+                    if (auto *aI = dyn_cast<AllocaInst>(&I)) {
+                        errs() << *aI << "\n";
+                        if (aI != insert_point)
+                            allocas.emplace_back(aI);
+                    }
+                }
+            }
+
+            for (auto *I : allocas)
+                I->moveBefore(insert_point);
+        }
+
     private:
         unsigned seed = static_cast<unsigned>(chrono::system_clock::now().time_since_epoch().count());
         default_random_engine rand_engine;
 
-        const uint64_t DEFAULT_ARRAY_SIZE = 10;
+        const uint64_t DEFAULT_ARRAY_SIZE = 5;
         Type *i32 = Type::getInt32Ty(getGlobalContext());
+        Type *i1 = Type::getInt1Ty(getGlobalContext());
         Type *i8 = Type::getInt8Ty(getGlobalContext());
         Type *i8p = Type::getInt8PtrTy(getGlobalContext());
     };

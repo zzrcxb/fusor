@@ -9,9 +9,9 @@
 
 int main(int argc, char **argv) {
   int test = argv[1][0] - '0';
-
-  if (test == 5)
-    return 0;
-  else
-    return 1;
+  
+  for (int i = 0; i < 10; i++) {
+    test++;
+  }
+  return 0;
 }

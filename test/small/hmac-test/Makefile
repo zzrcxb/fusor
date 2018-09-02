@@ -1,5 +1,5 @@
 CC = clang
-SO_PATH = /home/neil/fusor/build/array/libArrayPass.so
+SO_PATH = /home/neil/fusor_new/build/array/libArrayPass.so
 CC_FLAG = -Xclang -load -Xclang $(SO_PATH)
 
 all: hmac hmac_fusor
