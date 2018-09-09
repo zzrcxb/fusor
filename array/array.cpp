@@ -8,6 +8,7 @@
 #include "llvm/Transforms/IPO/PassManagerBuilder.h"
 #include "llvm/Transforms/Utils/BasicBlockUtils.h"
 #include "llvm/IR/CallSite.h"
+#include "llvm/Support/CommandLine.h"
 #include "func_searcher.hpp"
 #include <algorithm>
 #include <random>
@@ -18,6 +19,8 @@ using namespace llvm;
 
 #define True true
 #define False false // For Python lovers!
+
+cl::opt<int> POOL_SIZE("array_size", cl::desc("Obfuscation array's size"), cl::init(10));
 
 
 namespace {
@@ -39,7 +42,8 @@ namespace {
           bool isFirst = true;
           vector<SymArrayGroup> groups;
 
-          errs() << "===================\n" << F.getName() << "\n";
+          DEFAULT_ARRAY_SIZE = POOL_SIZE;
+          errs() << "Obfuscating function \"" << F.getName() << "\" with array size " << POOL_SIZE << "\n";
 
           for (auto &a : F.args())
             sym_vars.emplace_back(&a);
@@ -179,7 +183,7 @@ namespace {
         unsigned seed = static_cast<unsigned>(chrono::system_clock::now().time_since_epoch().count());
         default_random_engine rand_engine;
 
-        const uint64_t DEFAULT_ARRAY_SIZE = 5;
+        uint64_t DEFAULT_ARRAY_SIZE = 10;
         Type *i32 = Type::getInt32Ty(getGlobalContext());
         Type *i1 = Type::getInt1Ty(getGlobalContext());
         Type *i8 = Type::getInt8Ty(getGlobalContext());
