@@ -55,7 +55,7 @@ namespace {
             BBs.emplace_back(&B);
 
           while (!BBs.empty()) {
-            BasicBlock *B = BBs.front();
+            BasicBlock *B = BBs.front(); BBs.pop_front();
             BasicBlock *originB = B->splitBasicBlock(B->getFirstNonPHIOrDbgOrLifetime(), "originB");
 
             if (isFirst) {
@@ -93,8 +93,6 @@ namespace {
             BranchInst::Create(tailB, bb, cmp, originB);
 
             BranchInst::Create(originB, bb);
-
-            BBs.pop_front();
           }
 
           return true;
