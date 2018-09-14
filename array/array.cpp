@@ -43,7 +43,7 @@ namespace {
           vector<SymArrayGroup> groups;
 
           DEFAULT_ARRAY_SIZE = POOL_SIZE;
-          errs() << "Obfuscating function \"" << F.getName() << "\" with array size " << POOL_SIZE << "\n";
+          errs() << "\nObfuscating function \"" << F.getName() << "\" with array size " << POOL_SIZE << "\n";
 
           for (auto &a : F.args())
             sym_vars.emplace_back(&a);
@@ -77,7 +77,6 @@ namespace {
               auto *cmp = new ICmpInst(*B, CmpInst::ICMP_SGT, data, ConstantInt::get(i8, 0), "res");
               cmp_res.emplace_back(cmp);
             }
-
             auto *cmp = cmp_res.back();
             cmp_res.pop_back();
             while (!cmp_res.empty()) {
@@ -85,7 +84,6 @@ namespace {
               cmp_res.pop_back();
               cmp = BinaryOperator::Create(Instruction::And, cmp, rhs, "cmp", B);
             }
-
             BranchInst::Create(originB, bb, cmp, B);
 
             auto *tailB = originB->splitBasicBlock(--originB->end(), "tailB");
@@ -94,7 +92,6 @@ namespace {
 
             BranchInst::Create(originB, bb);
           }
-
           return true;
         }
 
