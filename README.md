@@ -17,7 +17,8 @@ Use `Ctrl+P Ctrl+Q` to escape, use `docker attach {container's name}` to attach,
 git clone https://github.com/zzrcxb/fusor.git
 cd fusor && mkdir build && cd build
 cmake ..
-make && cd ..```
+make && cd ..
+```
 
 # How to run
 
