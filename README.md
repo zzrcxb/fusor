@@ -1,13 +1,13 @@
 # fusor
 Obfuscator based on logic-bombs
 
-** Tested on clang-3.8, Debian 9.x**
+**Tested on clang-3.8, Debian 9.x**
 
 # Build fusor
-`git clone https://github.com/zzrcxb/fusor.git`
-`cd fusor && mkdir build`
-`cmake ..`
-`make && cd ..`
+```git clone https://github.com/zzrcxb/fusor.git```
+```cd fusor && mkdir build```
+```cmake ..```
+```make && cd ..```
 
 # How to run
 
