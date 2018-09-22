@@ -43,7 +43,7 @@ namespace {
           vector<SymArrayGroup> groups;
 
           DEFAULT_ARRAY_SIZE = POOL_SIZE;
-          errs() << "\nObfuscating function \"" << F.getName() << "\" with array size " << POOL_SIZE << "\n";
+          errs() << "Obfuscating function \"" << F.getName() << "\" with array size " << POOL_SIZE << "\n";
 
           for (auto &a : F.args())
             sym_vars.emplace_back(&a);
@@ -136,7 +136,9 @@ namespace {
 
           for (auto *sv : real_sym_var_loc) {
             auto *fst_array = new AllocaInst(aint, "fst_array", insert_point);
+            fst_array->setAlignment(1);
             auto *scd_array = new AllocaInst(aint, "scd_array", insert_point);
+            scd_array->setAlignment(1);
             vector<size_t> fst_index = intrange(DEFAULT_ARRAY_SIZE);
             shuffle(fst_index.begin(), fst_index.end(), rand_engine); // Shuffle it
             vector<size_t> scd_index = intrange(DEFAULT_ARRAY_SIZE);
