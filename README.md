@@ -13,10 +13,11 @@ docker run -itd --name {container's name} fusor /bin/bash
 Use `Ctrl+P Ctrl+Q` to escape, use `docker attach {container's name}` to attach, use `docker ps -a` to view all containers' status.
 
 # Build fusor
-```git clone https://github.com/zzrcxb/fusor.git```
-```cd fusor && mkdir build && cd build```
-```cmake ..```
-```make && cd ..```
+```
+git clone https://github.com/zzrcxb/fusor.git
+cd fusor && mkdir build && cd build
+cmake ..
+make && cd ..```
 
 # How to run
 
