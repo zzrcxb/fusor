@@ -19,8 +19,11 @@ using namespace llvm;
 
 #define True true
 #define False false // For Python lovers!
+#define IN_SET(ELEM, SET) (SET.find(ELEM) != SET.end())  // STL sucks!!!
+#define IN_MAP(KEY, MAP) (MAP.find(KEY) != MAP.end())    // STL sucks!!!
+#define ISINSTANCE(OBJ_P, CLASS) (dyn_cast<CLASS>(OBJ_P))  // C++ sucks!!!
 
-cl::opt<int> POOL_SIZE("array_size", cl::desc("Obfuscation array's size"), cl::init(10));
+cl::opt<uint64_t> POOL_SIZE("array_size", cl::desc("Obfuscation array's size"), cl::init(10));
 
 
 namespace {
@@ -36,25 +39,29 @@ namespace {
         ArrayPass() : FunctionPass(ID) {}
 
         bool runOnFunction(Function &F) override {
-          rand_engine.seed(++seed);
+          bool isFirst = true;
           vector<Value*> sym_vars;
           deque<BasicBlock*> BBs;
-          bool isFirst = true;
-          vector<SymArrayGroup> groups;
 
-          DEFAULT_ARRAY_SIZE = POOL_SIZE;
+          rand_engine.seed(++seed);
+
           errs() << "Obfuscating function \"" << F.getName() << "\" with array size " << POOL_SIZE << "\n";
 
+          // Initialize
           for (auto &a : F.args())
             sym_vars.emplace_back(&a);
 
-          if (sym_vars.empty())
-            return true;
+          if (sym_vars.empty()) // nothing will be changed if this function's arg list is empty
+            return False;
 
           for (auto &B : F)
             BBs.emplace_back(&B);
 
-          while (!BBs.empty()) {
+          // Initialize arrays
+          auto *fst_bb = ISINSTANCE(F.begin(), BasicBlock);
+          auto groups = alloca_dyn_mem(fst_bb, sym_vars);
+
+          while (False) {
             BasicBlock *B = BBs.front(); BBs.pop_front();
             BasicBlock *originB = B->splitBasicBlock(B->getFirstNonPHIOrDbgOrLifetime(), "originB");
 
@@ -92,6 +99,7 @@ namespace {
 
             BranchInst::Create(originB, bb);
           }
+          errs() << groups.size();
           return true;
         }
 
@@ -180,7 +188,7 @@ namespace {
         unsigned seed = static_cast<unsigned>(chrono::system_clock::now().time_since_epoch().count());
         default_random_engine rand_engine;
 
-        uint64_t DEFAULT_ARRAY_SIZE = 10;
+        uint64_t DEFAULT_ARRAY_SIZE = POOL_SIZE;
         Type *i32 = Type::getInt32Ty(getGlobalContext());
         Type *i1 = Type::getInt1Ty(getGlobalContext());
         Type *i8 = Type::getInt8Ty(getGlobalContext());
