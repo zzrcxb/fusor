@@ -5,23 +5,12 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-typedef struct {
-  int t1;
-  char t2, t3;
-} TS;
-
-int test(char a1, TS a2) {
-  char index1, index2;
-  index2 = *((char*)(&a2));
-  index1 = index2 % 8;
-  printf("%d\n", index2);
-}
-
 int main(int argc, char **argv) {
-  TS t;
-  t.t1 = argc;
-  t.t2 = 0;
-  t.t3 = 1;
-  test(-34, t);
+  int a[5] = {1,2,3,4,5};
+  int index = argv[1][0] - '0';
+
+  if (index < 5)
+    printf("%d\n", a[index]);
+
   return 0;
 }
