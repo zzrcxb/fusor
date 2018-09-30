@@ -43,6 +43,6 @@ build/
 *.bc
 
 # CFG
-.dot
-.jpg
-.png
+*.dot
+*.jpg
+*.png
