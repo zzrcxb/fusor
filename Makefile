@@ -1,5 +1,5 @@
 pass:
-	@cd build && cmake .. && make -j2
+	@cd build && cmake .. && make -j6
 
 test:
 	@opt-3.8 -load build/array/libArrayPass.so -array example.bc > /dev/null

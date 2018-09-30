@@ -9,8 +9,7 @@ int main(int argc, char **argv) {
   int a[5] = {1,2,3,4,5};
   int index = argv[1][0] - '0';
 
-  if (index < 5)
-    printf("%d\n", a[index]);
+  printf("%d\n", a[index]);
 
   return 0;
 }

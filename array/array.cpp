@@ -14,7 +14,7 @@
 #include <algorithm>
 #include <random>
 #include <chrono>
-#include <stack>
+#include <set>
 
 using namespace std;
 using namespace llvm;
@@ -29,14 +29,6 @@ cl::opt<uint64_t> POOL_SIZE("array_size", cl::desc("Obfuscation array's size"), 
 
 
 namespace {
-    struct SymArrayGroup {
-        Value *fst_array, *scd_array, *fst_index, *scd_index, *true_index;
-
-        SymArrayGroup(Value *fst_array, Value *scd_array, Value *fst_index, Value *scd_index, Value *true_index)
-                : fst_array(fst_array), scd_array(scd_array), fst_index(fst_index), scd_index(scd_index),
-                  true_index(true_index) {}
-    };
-
     struct ArrayPass : public FunctionPass {
         static char ID;
 
@@ -60,12 +52,23 @@ namespace {
           for (auto &B : F)
             BBs.emplace_back(&B);
 
+//          for (auto &B : F)
+//            B.setName("dbg");
+
           // move symvar alloca and store instruction into front
           auto *sv_bb = BasicBlock::Create(F.getContext(), "sv_bb", &F, BBs.front());
           BranchInst::Create(BBs.front(), sv_bb);
           auto svs_loc = move_symvar_to_front(sv_bb, sym_vars);
           // after moving, then you can do whatever you want with symvar
           auto *puzzle = build_puzzle(sv_bb->getTerminator(), svs_loc);
+          auto *fake = BasicBlock::Create(F.getContext(), "sv_bb", &F);
+          auto *tailB = BBs.front()->splitBasicBlock(--BBs.front()->end(), "tail");
+          sv_bb->getTerminator()->eraseFromParent();
+          BranchInst::Create(BBs.front(), fake, puzzle, sv_bb);
+          BranchInst::Create(BBs.front(), fake);
+
+          BBs.front()->getTerminator()->eraseFromParent();
+          BranchInst::Create(tailB, fake, puzzle, BBs.front());
 
 //          auto *fst_BB = BBs.front();
 //          BBs.pop_front();
@@ -109,14 +112,30 @@ namespace {
 //            BranchInst::Create(originB, bb);
 //          }
 //          errs() << groups.size();
-          return true;
+//          for (auto &B : F)
+//            around_half_div(&B);
+//
+//          for (auto &B : F) {
+//            errs() << B.getName() << ": pre={";
+//            for (BasicBlock *p : predecessors(&B))
+//              errs() << p->getName() << ",";
+//            errs() << "\b} suc={";
+//
+//            for (BasicBlock *s : successors(&B))
+//              errs() << s->getName() << ",";
+//            errs() << "\b}\n";
+//          }
+//          errs() << "====== DONE ======\n";
+          return True;
         }
 
     private:
         Value* build_puzzle(Instruction *insert_point, map<Value*, Instruction*> svs_loc, size_t num_nested=2) {
           ArrayType *aint = ArrayType::get(i8, DEFAULT_ARRAY_SIZE);
-          vector<AllocaInst*> allocated;
           uniform_int_distribution<uint8_t> i8_generator(0, 255);
+          map<Value*, Instruction*> svs_index;
+          vector<AllocaInst*> allocated;
+          Value *result = ConstantInt::get(i1, 1);
 
           for (size_t _ = 0; _ < num_nested; _++) {
             auto *array = new AllocaInst(aint, "array", insert_point);
@@ -140,6 +159,8 @@ namespace {
                   new BitCastInst(loc, i8p, "casted", insert_point), "trunced.symvar", insert_point),
                 ConstantInt::get(i8, 0x7F), "fxxk_srem", insert_point),
               ConstantInt::get(i8, DEFAULT_ARRAY_SIZE), "index", insert_point);
+            svs_index.insert(pair<Value*, Instruction*>(sv, index)); // stored for later use, in case symvar changed
+
             for (size_t layer = 0; layer < num_nested - 1; layer++) {
               auto *data = new LoadInst(allocated[layer], "data", insert_point);
               Value* under[2] = {ConstantInt::get(i8, 0), index};
@@ -159,13 +180,96 @@ namespace {
                     insert_point);
           }
 
+          // load the data
+          for (auto p : svs_index) {
+            auto *sv = p.first;
+            auto *index = p.second;
+            for (size_t layer = 0; layer < num_nested - 1; layer++) {
+              auto *data = new LoadInst(allocated[layer], "data", insert_point);
+              Value* under[2] = {ConstantInt::get(i8, 0), index};
+              auto af_index = ArrayRef<Value*>(under, 2);
+              index = BinaryOperator::Create(Instruction::BinaryOps::SRem,
+                        BinaryOperator::Create(Instruction::BinaryOps::And,
+                          new LoadInst(
+                            GetElementPtrInst::CreateInBounds(allocated[layer], af_index, "ptr", insert_point),
+                            "data", insert_point),
+                          ConstantInt::get(i8, 0x7F), "fxxk_srem", insert_point),
+                        ConstantInt::get(i8, DEFAULT_ARRAY_SIZE), "index", insert_point);
+            }
+            Value* under[2] = {ConstantInt::get(i8, 0), index};
+            auto af_index = ArrayRef<Value*>(under, 2);
+            auto *data = new LoadInst(GetElementPtrInst::CreateInBounds(allocated.back(), af_index, "ptr", insert_point),
+                    "data", insert_point);
+            result = BinaryOperator::Create(Instruction::BinaryOps::And,
+                    new ICmpInst(insert_point, CmpInst::ICMP_EQ, data, ConstantInt::get(i8, 255), "cmp"),
+                    result, "res", insert_point);
+          }
+          return result;
+        }
 
-          Value *result = ConstantInt::get(i8, 1);
+        deque<Instruction*> around_half_div(BasicBlock *bdiv, float threshold=.9) {
+          set<Instruction*> cannot_move;
+          deque<Instruction*> gonna_move;
+          auto total_size = bdiv->size();
+          auto start_point = bdiv->getFirstInsertionPt();
+          auto end_point = bdiv->getTerminator();
+          errs() << bdiv->getName() << "\t" << *ISINSTANCE(start_point, Instruction) << "\n";
+          // search for all instructions before
+          for (auto &I : *bdiv) {
+            if (&I == start_point)
+              break;
+            for (User *u : I.users()) {
+              if (auto *ui = ISINSTANCE(u, Instruction)) {
+                if (ui->getParent() == bdiv)
+                  cannot_move.insert(ui);
+              }
+            }
+          }
 
+          uniform_real_distribution<float> gen(.0, 1.0);
 
+          auto cit = start_point;
+          for (auto stop_point = bdiv->end()--; cit != stop_point; cit++) {
+            if (auto *ci = ISINSTANCE(cit, Instruction)) {
+              if (!IN_SET(ci, cannot_move) && gen(rand_engine) < threshold)
+                gonna_move.push_back(ci);
+              else
+                break;
+            }
+          }
 
+          return gonna_move;
+        }
 
-          return nullptr;
+        bool insert_randomly(BasicBlock *bins, float threshold, deque<Instruction*> &gonna_move) {
+          set<Instruction*> scanned;
+          map<Instruction*, Instruction*> iips; // instruction insert points
+
+          auto insert_point = bins->getFirstInsertionPt();
+          // skip instructions before insert point
+          for (auto &I : *bins) {
+            if (&I != ISINSTANCE(insert_point, Instruction)) {
+              scanned.insert(&I);
+            }
+            else
+              break;
+          }
+
+          for (auto *I : gonna_move) {
+            for (Use &u : I->operands()) { // check all uses
+              if (auto *ui = ISINSTANCE(u.get(), Instruction)) {
+                if (!IN_SET(ui, scanned) && ui->getParent() == bins) {
+                  while (ui != ISINSTANCE(insert_point, Instruction) && insert_point != bins->end()) {
+                    insert_point++;
+                    scanned.insert(ISINSTANCE(insert_point, Instruction));
+                  }
+                }
+                iips.insert(pair<Instruction*, Instruction*>(I, insert_point));
+              }
+            } // end of uses check
+          }
+
+          return True;
         }
 
         vector<Constant*> rand_index_generator(size_t size) {
@@ -183,7 +287,7 @@ namespace {
           map<Value *, Instruction *> locations;
 
           for (auto *sv : sym_var) {
-            bool found = false;
+            bool found = False;
             for (auto &u : sv->uses()) {
               if (auto *storeI = dyn_cast<StoreInst>(u.getUser())) {
                 if (auto *allocaI = dyn_cast<AllocaInst>(storeI->getOperand(1))) {
@@ -296,7 +400,7 @@ namespace {
 
 char ArrayPass::ID = 0;
 
-static RegisterPass<ArrayPass> X("array", "Array Pass", false, false);
+static RegisterPass<ArrayPass> X("array", "Array Pass", False, False);
 
 // Automatically enable the pass.
 // http://adriansampson.net/blog/clangpass.html
