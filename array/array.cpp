@@ -27,7 +27,7 @@ using namespace llvm;
 #define IN_MAP(KEY, MAP) (MAP.find(KEY) != MAP.end())    // STL sucks!!!
 #define ISINSTANCE(OBJ_P, CLASS) (dyn_cast<CLASS>(OBJ_P))  // C++ sucks!!!
 
-cl::opt<uint8_t> POOL_SIZE("array_size", cl::desc("Obfuscation array's size"), cl::init(60));
+cl::opt<uint8_t> POOL_SIZE("array_size", cl::desc("Obfuscation array's size"), cl::init(64));
 
 
 namespace {
@@ -42,7 +42,7 @@ namespace {
 
           rand_engine.seed(++seed);
 
-          errs() << "Obfuscating function \"" << F.getName() << "\" with array size " << (int)ARRAY_SIZE << "\n";
+          errs() << "Obfuscating \"" << F.getName() << "\" with array size " << (int)ARRAY_SIZE << "\t";
 
           // Initialize
           for (auto &a : F.args())
@@ -54,15 +54,14 @@ namespace {
           for (auto &B : F)
             BBs.emplace_back(&B);
 
-//          for (auto &B : F)
-//            B.setName("dbg");
-
-
           // move symvar alloca and store instruction into front
           auto *sv_bb = BasicBlock::Create(F.getContext(), "sv_bb", &F, BBs.front());
           BranchInst::Create(BBs.front(), sv_bb);
+
           auto svs_loc = move_symvar_to_front(sv_bb, sym_vars);
           // after moving, then you can do whatever you want with symvar
+
+
 //          auto *puzzle = build_puzzle(sv_bb->getTerminator(), svs_loc);
           auto *puzzle = puzzle2(sv_bb->getTerminator(), svs_loc);
           auto *fake = BasicBlock::Create(F.getContext(), "sv_bb", &F);
@@ -71,7 +70,6 @@ namespace {
 //          BranchInst::Create(BBs.front(), sv_bb);
           BranchInst::Create(BBs.front(), fake, puzzle, sv_bb);
           BranchInst::Create(BBs.front(), fake);
-//          ReturnInst::Create(F.getContext(), ConstantInt::get(i32, 1), fake);
           BBs.front()->getTerminator()->eraseFromParent();
           BranchInst::Create(tailB, fake, puzzle, BBs.front());
 
@@ -137,30 +135,36 @@ namespace {
         }
 
     private:
-        Value* puzzle2(Instruction *insert_point, map<Value*, Instruction*> svs_loc) {
+
+
+        Value* puzzle2(Instruction *insert_point, map<Value*, Instruction*> svs_loc, size_t sv_cnt=0) { // 0 for all
           ArrayType *aint = ArrayType::get(i8, ARRAY_SIZE);
           uniform_int_distribution<uint8_t> i8_generator(0, 127);
-
-//          vector<Constant*> data1{
-//              ConstantInt::get(i8, 240),
-//              ConstantInt::get(i8, 241),
-//              ConstantInt::get(i8, 242)
-//            }, data2{
-//              ConstantInt::get(i8, 240),
-//              ConstantInt::get(i8, 241),
-//              ConstantInt::get(i8, 242)
-//          };
           vector<Constant*> data1(ARRAY_SIZE), data2(ARRAY_SIZE);
+
+          // setup sv_to_run
+          map<Value*, Instruction*> sv_to_run;
+          size_t cnt = 0;
+          for (auto &p : svs_loc) {
+            if (cnt < sv_cnt || sv_cnt == 0)
+              sv_to_run.insert(p);
+            else
+              break;
+            cnt++;
+          }
+
+          // setup mapping
           vector<uint8_t> mapping;
           for (uint8_t i = 0; i < ARRAY_SIZE; i++)
             mapping.push_back(i);
           shuffle(mapping.begin(), mapping.end(), rand_engine);
 
+          // generate arrays
           for (uint8_t i = 0; i < ARRAY_SIZE; i++) {
-            errs() << (int)i << "->" << (int)mapping[i] << ": ";
+//            errs() << (int)i << "->" << (int)mapping[i] << ": ";
             auto tmp1 = (i8_generator(rand_engine) / ARRAY_SIZE) * ARRAY_SIZE + mapping[i];
             auto tmp2 = (i8_generator(rand_engine) / ARRAY_SIZE) * ARRAY_SIZE + i;
-            errs() << tmp1 << ", " << tmp2 << ", " << tmp1 % ARRAY_SIZE << ", " << tmp2 % ARRAY_SIZE << "\n";
+//            errs() << tmp1 << ", " << tmp2 << ", " << tmp1 % ARRAY_SIZE << ", " << tmp2 % ARRAY_SIZE << "\n";
             if (tmp1 % ARRAY_SIZE != mapping[i] || tmp2 % ARRAY_SIZE != i)
               errs() << "=== ERROR! ===\n";
             data1[i] = ConstantInt::get(i8, tmp1);
@@ -172,16 +176,25 @@ namespace {
           auto *array2 = new GlobalVariable(*module, aint, True, GlobalValue::InternalLinkage, ConstantArray::get(aint, data2), "array");
           Value *result = ConstantInt::get(i1, 1);
 
-          for (auto p : svs_loc) {
+          // get truncated symvars
+          map<Value*, Instruction*> svs_index;
+          for (auto &p : sv_to_run) {
             auto *sv = p.first;
             auto *loc = p.second;
-            Value* under[2] = {ConstantInt::get(i8, 0), nullptr};
-
             auto *index = BinaryOperator::Create(Instruction::BinaryOps::URem,
                             new LoadInst(
-                              new BitCastInst(loc, i8p, "casted", insert_point), "trunced.symvar", insert_point),
+                              new BitCastInst(loc, i8p, "casted", insert_point),
+                              "trunced.symvar", insert_point),
                             ConstantInt::get(i8, ARRAY_SIZE), "index", insert_point);
+            svs_index.insert(pair<Value *, Instruction *>(sv, index));
+          }
 
+          // load from array
+          map<Value*, Instruction*> svs_index_loaded;
+          for (auto &p : svs_index) {
+            auto *sv = p.first;
+            auto *index = p.second;
+            Value *under[2] = {ConstantInt::get(i8, 0), nullptr};
             under[1] = index;
             auto *fst_data = new LoadInst(
                       GetElementPtrInst::CreateInBounds(array1, ArrayRef<Value*>(under, 2), "ptr", insert_point), "a1_data", insert_point);
@@ -193,9 +206,17 @@ namespace {
                     GetElementPtrInst::CreateInBounds(array2, ArrayRef<Value*>(under, 2), "ptr", insert_point), "a2_data", insert_point);
             auto *index3 = BinaryOperator::Create(Instruction::BinaryOps::URem,
                                                   scd_data, ConstantInt::get(i8, ARRAY_SIZE), "index3", insert_point);
+            svs_index_loaded.insert(pair<Value *, Instruction *>(sv, index3));
+          }
+
+          // calculate results
+          for (auto &p : svs_index_loaded) {
+            auto *sv = p.first;
+            auto *index = svs_index[sv];
+            auto *index_loaded = p.second;
             result = BinaryOperator::Create(Instruction::BinaryOps::And,
-                                            new ICmpInst(insert_point, CmpInst::ICMP_EQ, index3, index, "cmp"),
-                                            result, "res", insert_point);
+                       new ICmpInst(insert_point, CmpInst::ICMP_EQ, index_loaded, index, "cmp"),
+                       result, "res", insert_point);
           }
 
           return result;
