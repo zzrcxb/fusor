@@ -1,5 +1,7 @@
 #include "llvm/Pass.h"
+#include "llvm/IR/IRBuilder.h"
 #include "llvm/IR/Function.h"
+#include "llvm/IR/Module.h"
 #include "llvm/IR/LegacyPassManager.h"
 #include "llvm/IR/InstrTypes.h"
 #include "llvm/IR/IRBuilder.h"
@@ -25,7 +27,7 @@ using namespace llvm;
 #define IN_MAP(KEY, MAP) (MAP.find(KEY) != MAP.end())    // STL sucks!!!
 #define ISINSTANCE(OBJ_P, CLASS) (dyn_cast<CLASS>(OBJ_P))  // C++ sucks!!!
 
-cl::opt<uint64_t> POOL_SIZE("array_size", cl::desc("Obfuscation array's size"), cl::init(2));
+cl::opt<uint8_t> POOL_SIZE("array_size", cl::desc("Obfuscation array's size"), cl::init(60));
 
 
 namespace {
@@ -40,7 +42,7 @@ namespace {
 
           rand_engine.seed(++seed);
 
-          errs() << "Obfuscating function \"" << F.getName() << "\" with array size " << POOL_SIZE << "\n";
+          errs() << "Obfuscating function \"" << F.getName() << "\" with array size " << (int)ARRAY_SIZE << "\n";
 
           // Initialize
           for (auto &a : F.args())
@@ -55,18 +57,21 @@ namespace {
 //          for (auto &B : F)
 //            B.setName("dbg");
 
+
           // move symvar alloca and store instruction into front
           auto *sv_bb = BasicBlock::Create(F.getContext(), "sv_bb", &F, BBs.front());
           BranchInst::Create(BBs.front(), sv_bb);
           auto svs_loc = move_symvar_to_front(sv_bb, sym_vars);
           // after moving, then you can do whatever you want with symvar
-          auto *puzzle = build_puzzle(sv_bb->getTerminator(), svs_loc);
+//          auto *puzzle = build_puzzle(sv_bb->getTerminator(), svs_loc);
+          auto *puzzle = puzzle2(sv_bb->getTerminator(), svs_loc);
           auto *fake = BasicBlock::Create(F.getContext(), "sv_bb", &F);
           auto *tailB = BBs.front()->splitBasicBlock(--BBs.front()->end(), "tail");
           sv_bb->getTerminator()->eraseFromParent();
+//          BranchInst::Create(BBs.front(), sv_bb);
           BranchInst::Create(BBs.front(), fake, puzzle, sv_bb);
           BranchInst::Create(BBs.front(), fake);
-
+//          ReturnInst::Create(F.getContext(), ConstantInt::get(i32, 1), fake);
           BBs.front()->getTerminator()->eraseFromParent();
           BranchInst::Create(tailB, fake, puzzle, BBs.front());
 
@@ -112,9 +117,10 @@ namespace {
 //            BranchInst::Create(originB, bb);
 //          }
 //          errs() << groups.size();
+
 //          for (auto &B : F)
 //            around_half_div(&B);
-//
+
 //          for (auto &B : F) {
 //            errs() << B.getName() << ": pre={";
 //            for (BasicBlock *p : predecessors(&B))
@@ -125,13 +131,78 @@ namespace {
 //              errs() << s->getName() << ",";
 //            errs() << "\b}\n";
 //          }
-//          errs() << "====== DONE ======\n";
+
+          errs() << "====== DONE ======\n";
           return True;
         }
 
     private:
+        Value* puzzle2(Instruction *insert_point, map<Value*, Instruction*> svs_loc) {
+          ArrayType *aint = ArrayType::get(i8, ARRAY_SIZE);
+          uniform_int_distribution<uint8_t> i8_generator(0, 127);
+
+//          vector<Constant*> data1{
+//              ConstantInt::get(i8, 240),
+//              ConstantInt::get(i8, 241),
+//              ConstantInt::get(i8, 242)
+//            }, data2{
+//              ConstantInt::get(i8, 240),
+//              ConstantInt::get(i8, 241),
+//              ConstantInt::get(i8, 242)
+//          };
+          vector<Constant*> data1(ARRAY_SIZE), data2(ARRAY_SIZE);
+          vector<uint8_t> mapping;
+          for (uint8_t i = 0; i < ARRAY_SIZE; i++)
+            mapping.push_back(i);
+          shuffle(mapping.begin(), mapping.end(), rand_engine);
+
+          for (uint8_t i = 0; i < ARRAY_SIZE; i++) {
+            errs() << (int)i << "->" << (int)mapping[i] << ": ";
+            auto tmp1 = (i8_generator(rand_engine) / ARRAY_SIZE) * ARRAY_SIZE + mapping[i];
+            auto tmp2 = (i8_generator(rand_engine) / ARRAY_SIZE) * ARRAY_SIZE + i;
+            errs() << tmp1 << ", " << tmp2 << ", " << tmp1 % ARRAY_SIZE << ", " << tmp2 % ARRAY_SIZE << "\n";
+            if (tmp1 % ARRAY_SIZE != mapping[i] || tmp2 % ARRAY_SIZE != i)
+              errs() << "=== ERROR! ===\n";
+            data1[i] = ConstantInt::get(i8, tmp1);
+            data2[mapping[i]] = ConstantInt::get(i8, tmp2);
+          }
+
+          auto *module = insert_point->getParent()->getParent()->getParent();
+          auto *array1 = new GlobalVariable(*module, aint, True, GlobalValue::InternalLinkage, ConstantArray::get(aint, data1), "array");
+          auto *array2 = new GlobalVariable(*module, aint, True, GlobalValue::InternalLinkage, ConstantArray::get(aint, data2), "array");
+          Value *result = ConstantInt::get(i1, 1);
+
+          for (auto p : svs_loc) {
+            auto *sv = p.first;
+            auto *loc = p.second;
+            Value* under[2] = {ConstantInt::get(i8, 0), nullptr};
+
+            auto *index = BinaryOperator::Create(Instruction::BinaryOps::URem,
+                            new LoadInst(
+                              new BitCastInst(loc, i8p, "casted", insert_point), "trunced.symvar", insert_point),
+                            ConstantInt::get(i8, ARRAY_SIZE), "index", insert_point);
+
+            under[1] = index;
+            auto *fst_data = new LoadInst(
+                      GetElementPtrInst::CreateInBounds(array1, ArrayRef<Value*>(under, 2), "ptr", insert_point), "a1_data", insert_point);
+            auto *index2 = BinaryOperator::Create(Instruction::BinaryOps::URem,
+                    fst_data, ConstantInt::get(i8, ARRAY_SIZE), "index2", insert_point);
+
+            under[1] = index2;
+            auto *scd_data = new LoadInst(
+                    GetElementPtrInst::CreateInBounds(array2, ArrayRef<Value*>(under, 2), "ptr", insert_point), "a2_data", insert_point);
+            auto *index3 = BinaryOperator::Create(Instruction::BinaryOps::URem,
+                                                  scd_data, ConstantInt::get(i8, ARRAY_SIZE), "index3", insert_point);
+            result = BinaryOperator::Create(Instruction::BinaryOps::And,
+                                            new ICmpInst(insert_point, CmpInst::ICMP_EQ, index3, index, "cmp"),
+                                            result, "res", insert_point);
+          }
+
+          return result;
+        }
+
         Value* build_puzzle(Instruction *insert_point, map<Value*, Instruction*> svs_loc, size_t num_nested=2) {
-          ArrayType *aint = ArrayType::get(i8, DEFAULT_ARRAY_SIZE);
+          ArrayType *aint = ArrayType::get(i8, ARRAY_SIZE);
           uniform_int_distribution<uint8_t> i8_generator(0, 255);
           map<Value*, Instruction*> svs_index;
           vector<AllocaInst*> allocated;
@@ -141,7 +212,7 @@ namespace {
             auto *array = new AllocaInst(aint, "array", insert_point);
             allocated.push_back(array);
 
-            for (uint64_t i = 0; i < DEFAULT_ARRAY_SIZE; i++) {
+            for (uint64_t i = 0; i < ARRAY_SIZE; i++) {
               Value* under[2] = {ConstantInt::get(i8, 0), ConstantInt::get(i8, i)};
               auto index = ArrayRef<Value*>(under, 2);
               auto *ptr = GetElementPtrInst::CreateInBounds(array, index, "ptr", insert_point);
@@ -158,7 +229,7 @@ namespace {
                 new LoadInst(
                   new BitCastInst(loc, i8p, "casted", insert_point), "trunced.symvar", insert_point),
                 ConstantInt::get(i8, 0x7F), "fxxk_srem", insert_point),
-              ConstantInt::get(i8, DEFAULT_ARRAY_SIZE), "index", insert_point);
+              ConstantInt::get(i8, ARRAY_SIZE), "index", insert_point);
             svs_index.insert(pair<Value*, Instruction*>(sv, index)); // stored for later use, in case symvar changed
 
             for (size_t layer = 0; layer < num_nested - 1; layer++) {
@@ -171,7 +242,7 @@ namespace {
                             GetElementPtrInst::CreateInBounds(allocated[layer], af_index, "ptr", insert_point),
                             "data", insert_point),
                           ConstantInt::get(i8, 0x7F), "fxxk_srem", insert_point),
-                      ConstantInt::get(i8, DEFAULT_ARRAY_SIZE), "index", insert_point);
+                      ConstantInt::get(i8, ARRAY_SIZE), "index", insert_point);
             }
             Value* under[2] = {ConstantInt::get(i8, 0), index};
             auto af_index = ArrayRef<Value*>(under, 2);
@@ -194,7 +265,7 @@ namespace {
                             GetElementPtrInst::CreateInBounds(allocated[layer], af_index, "ptr", insert_point),
                             "data", insert_point),
                           ConstantInt::get(i8, 0x7F), "fxxk_srem", insert_point),
-                        ConstantInt::get(i8, DEFAULT_ARRAY_SIZE), "index", insert_point);
+                        ConstantInt::get(i8, ARRAY_SIZE), "index", insert_point);
             }
             Value* under[2] = {ConstantInt::get(i8, 0), index};
             auto af_index = ArrayRef<Value*>(under, 2);
@@ -310,7 +381,7 @@ namespace {
 
 //        vector<SymArrayGroup> alloca_fusor_array(BasicBlock *BB, const vector<Value *> &sym_var, uint64_t array_size) {
 //          Instruction *insert_point = dyn_cast<Instruction>(BB->begin());
-//          ArrayType *aint = ArrayType::get(i8, DEFAULT_ARRAY_SIZE);
+//          ArrayType *aint = ArrayType::get(i8, ARRAY_SIZE);
 //          vector<SymArrayGroup> res;
 //          vector<Value *> real_sym_var_loc;
 //
@@ -339,12 +410,12 @@ namespace {
 //            fst_array->setAlignment(1);
 //            auto *scd_array = new AllocaInst(aint, "scd_array", insert_point);
 //            scd_array->setAlignment(1);
-//            vector<size_t> fst_index = intrange(DEFAULT_ARRAY_SIZE);
+//            vector<size_t> fst_index = intrange(ARRAY_SIZE);
 //            shuffle(fst_index.begin(), fst_index.end(), rand_engine); // Shuffle it
-//            vector<size_t> scd_index = intrange(DEFAULT_ARRAY_SIZE);
+//            vector<size_t> scd_index = intrange(ARRAY_SIZE);
 //            shuffle(scd_index.begin(), scd_index.end(), rand_engine); // Shuffle it
 //            // These can be replaced by llvm.memset
-//            for (u_int64_t i = 0; i < DEFAULT_ARRAY_SIZE; i++) {
+//            for (u_int64_t i = 0; i < ARRAY_SIZE; i++) {
 //              Value *idx[2] = {ConstantInt::get(i8, 0), ConstantInt::get(i8, i)};
 //              auto af = ArrayRef<Value *>(idx, (size_t) 2);
 //              auto *ptr1 = GetElementPtrInst::CreateInBounds(fst_array, af, "ptr1", insert_point);
@@ -364,7 +435,7 @@ namespace {
 //                                    insert_point),
 //                            ConstantInt::get(i8, 0x7F),
 //                            "bug_fix", insert_point),
-//                    ConstantInt::get(i8, DEFAULT_ARRAY_SIZE),
+//                    ConstantInt::get(i8, ARRAY_SIZE),
 //                    "true_index",
 //                    insert_point);
 //
@@ -378,7 +449,7 @@ namespace {
 //                                                           insert_point);
 //            auto *original = new LoadInst(ptr2, "orgi", insert_point);
 //            auto *final_val = BinaryOperator::Create(Instruction::BinaryOps::Add, original,
-//                                                     ConstantInt::get(i8, DEFAULT_ARRAY_SIZE), "res", insert_point);
+//                                                     ConstantInt::get(i8, ARRAY_SIZE), "res", insert_point);
 //            auto *store = new StoreInst(final_val, ptr2, insert_point);
 //
 //            res.emplace_back(SymArrayGroup(fst_array, scd_array, ptr1, ptr2, true_index));
@@ -390,11 +461,12 @@ namespace {
         unsigned seed = static_cast<unsigned>(chrono::system_clock::now().time_since_epoch().count());
         default_random_engine rand_engine;
 
-        uint64_t DEFAULT_ARRAY_SIZE = POOL_SIZE;
+        uint8_t ARRAY_SIZE = POOL_SIZE;
         Type *i32 = Type::getInt32Ty(getGlobalContext());
         Type *i1 = Type::getInt1Ty(getGlobalContext());
         Type *i8 = Type::getInt8Ty(getGlobalContext());
         Type *i8p = Type::getInt8PtrTy(getGlobalContext());
+        Type *i32p = Type::getInt32PtrTy(getGlobalContext());
     };
 }
 
