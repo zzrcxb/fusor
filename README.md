@@ -5,6 +5,12 @@ Obfuscator based on logic-bombs
 
 # Using Docker (Recommended)
 How to install [Docker](https://docs.docker.com/install/).
+## Pull from Docker Hub
+```
+docker pull zzrcxb/fusor
+docker run -itd --name {container's name} fusor /bin/bash
+```
+## or Build by Yourself
 ```
 wget https://raw.githubusercontent.com/zzrcxb/fusor/master/Dockerfile
 docker build -t fusor .
