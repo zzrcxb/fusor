@@ -27,7 +27,7 @@ using namespace llvm;
 #define IN_MAP(KEY, MAP) (MAP.find(KEY) != MAP.end())    // STL sucks!!!
 #define ISINSTANCE(OBJ_P, CLASS) (dyn_cast<CLASS>(OBJ_P))  // C++ sucks!!!
 
-cl::opt<uint8_t> POOL_SIZE("array_size", cl::desc("Obfuscation array's size"), cl::init(64));
+cl::opt<uint8_t> POOL_SIZE("array_size", cl::desc("Obfuscation fusor's size"), cl::init(64));
 
 
 namespace {
@@ -42,7 +42,7 @@ namespace {
 
           rand_engine.seed(++seed);
 
-          errs() << "Obfuscating \"" << F.getName() << "\" with array size " << (int)ARRAY_SIZE << "\t";
+          errs() << "Obfuscating \"" << F.getName() << "\" with fusor size " << (int)ARRAY_SIZE << "\t";
 
           // Initialize
           for (auto &a : F.args())
@@ -67,12 +67,34 @@ namespace {
           auto *fake = BasicBlock::Create(F.getContext(), "sv_bb", &F);
           auto *tailB = BBs.front()->splitBasicBlock(--BBs.front()->end(), "tail");
           sv_bb->getTerminator()->eraseFromParent();
-//          BranchInst::Create(BBs.front(), sv_bb);
           BranchInst::Create(BBs.front(), fake, puzzle, sv_bb);
+//          ReturnInst::Create(F.getContext(), ConstantInt::get(i32, 1), fake);
           BranchInst::Create(BBs.front(), fake);
           BBs.front()->getTerminator()->eraseFromParent();
           BranchInst::Create(tailB, fake, puzzle, BBs.front());
 
+//          if (tailB->getTerminator()->getNumSuccessors() > 1 && ISINSTANCE(tailB->getTerminator(), BranchInst)) {
+//            auto *br = ISINSTANCE(tailB->getTerminator(), BranchInst);
+//            auto *tar1 = ISINSTANCE(br->getOperand(1), BasicBlock), *tar2 = ISINSTANCE(br->getOperand(2), BasicBlock);
+//            auto *old_condition = br->getOperand(0);
+//            auto *new_condition = BinaryOperator::Create(Instruction::BinaryOps::And, old_condition, puzzle, "puzzle", br);
+//            tailB->getTerminator()->eraseFromParent();
+//            BranchInst::Create(tar2, tar1, new_condition, tailB);
+//          }
+
+//          BBs.pop_front();
+//          while (!BBs.empty()) {
+//            auto *bb1 = BBs.front();
+//            auto *sv_bb1 = BasicBlock::Create(F.getContext(), "sv_bb", &F);
+//            auto *fake1 = BasicBlock::Create(F.getContext(), "sv_bb", &F);
+//            auto *tailB1 = bb1->splitBasicBlock(--bb1->end(), "tail");
+//            BranchInst::Create(bb1, fake1, puzzle, sv_bb1);
+//            BranchInst::Create(bb1, fake1);
+//            bb1->getTerminator()->eraseFromParent();
+//            BranchInst::Create(tailB1, fake1, puzzle, bb1);
+//
+//            BBs.pop_front();
+//          }
 //          auto *fst_BB = BBs.front();
 //          BBs.pop_front();
 //          auto *originB = fst_BB->splitBasicBlock(fst_BB->getFirstNonPHIOrDbgOrLifetime(), "originB");
@@ -172,8 +194,8 @@ namespace {
           }
 
           auto *module = insert_point->getParent()->getParent()->getParent();
-          auto *array1 = new GlobalVariable(*module, aint, True, GlobalValue::InternalLinkage, ConstantArray::get(aint, data1), "array");
-          auto *array2 = new GlobalVariable(*module, aint, True, GlobalValue::InternalLinkage, ConstantArray::get(aint, data2), "array");
+          auto *array1 = new GlobalVariable(*module, aint, True, GlobalValue::InternalLinkage, ConstantArray::get(aint, data1), "fusor");
+          auto *array2 = new GlobalVariable(*module, aint, True, GlobalValue::InternalLinkage, ConstantArray::get(aint, data2), "fusor");
           Value *result = ConstantInt::get(i1, 1);
 
           // get truncated symvars
@@ -189,7 +211,7 @@ namespace {
             svs_index.insert(pair<Value *, Instruction *>(sv, index));
           }
 
-          // load from array
+          // load from fusor
           map<Value*, Instruction*> svs_index_loaded;
           for (auto &p : svs_index) {
             auto *sv = p.first;
@@ -230,7 +252,7 @@ namespace {
           Value *result = ConstantInt::get(i1, 1);
 
           for (size_t _ = 0; _ < num_nested; _++) {
-            auto *array = new AllocaInst(aint, "array", insert_point);
+            auto *array = new AllocaInst(aint, "fusor", insert_point);
             allocated.push_back(array);
 
             for (uint64_t i = 0; i < ARRAY_SIZE; i++) {
@@ -493,7 +515,7 @@ namespace {
 
 char ArrayPass::ID = 0;
 
-static RegisterPass<ArrayPass> X("array", "Array Pass", False, False);
+static RegisterPass<ArrayPass> X("fusor", "Array Pass", False, False);
 
 // Automatically enable the pass.
 // http://adriansampson.net/blog/clangpass.html
