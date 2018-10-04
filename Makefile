@@ -1,6 +1,4 @@
-prefix=_fusor
-
-pass: build
+pass:
 	@cd build && cmake .. && make -j2
 
 build:
@@ -9,7 +7,7 @@ build:
 opt: example.bc
 	@opt-3.8 -load build/fusor/libFusorPass.so -array example.bc > /dev/null
 
-rebuild:
+rebuild: example.c
 	@clang -S -emit-llvm example.c
 	@clang -c -emit-llvm example.c
 
