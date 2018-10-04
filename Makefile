@@ -7,11 +7,11 @@ opt: example.bc
 	@opt-3.8 -load build/fusor/libFusorPass.so -array example.bc > /dev/null
 
 rebuild:
-	clang -S -emit-llvm example.c
-	clang -c -emit-llvm example.c
+	@clang -S -emit-llvm example.c
+	@clang -c -emit-llvm example.c
 
 full: pass example.c
-	clang -Xclang -load -Xclang build/fusor/libFusorPass.so example.c
+	@clang -Xclang -load -Xclang build/fusor/libFusorPass.so example.c
 
 test: pass
 	@for dir in $$(ls test); do \
