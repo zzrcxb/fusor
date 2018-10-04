@@ -13,7 +13,6 @@
 #include "llvm/IR/CallSite.h"
 #include "llvm/Support/CommandLine.h"
 #include "func_searcher.hpp"
-#include "utils.hpp"
 #include <algorithm>
 #include <random>
 #include <chrono>
@@ -22,15 +21,20 @@
 using namespace std;
 using namespace llvm;
 
+#define True true
+#define False false // For Python lovers!
+#define IN_SET(ELEM, SET) (SET.find(ELEM) != SET.end())  // STL sucks!!!
+#define IN_MAP(KEY, MAP) (MAP.find(KEY) != MAP.end())    // STL sucks!!!
+#define ISINSTANCE(OBJ_P, CLASS) (dyn_cast<CLASS>(OBJ_P))  // C++ sucks!!!
 
 cl::opt<uint8_t> POOL_SIZE("array_size", cl::desc("Obfuscation fusor's size"), cl::init(64));
 
 
 namespace {
-    struct FusorPass : public FunctionPass {
+    struct ArrayPass : public FunctionPass {
         static char ID;
 
-        FusorPass() : FunctionPass(ID) {}
+        ArrayPass() : FunctionPass(ID) {}
 
         bool runOnFunction(Function &F) override {
           vector<Value *> sym_vars;
@@ -57,14 +61,96 @@ namespace {
           auto svs_loc = move_symvar_to_front(sv_bb, sym_vars);
           // after moving, then you can do whatever you want with symvar
 
+
+//          auto *puzzle = build_puzzle(sv_bb->getTerminator(), svs_loc);
           auto *puzzle = puzzle2(sv_bb->getTerminator(), svs_loc);
           auto *fake = BasicBlock::Create(F.getContext(), "sv_bb", &F);
           auto *tailB = BBs.front()->splitBasicBlock(--BBs.front()->end(), "tail");
           sv_bb->getTerminator()->eraseFromParent();
           BranchInst::Create(BBs.front(), fake, puzzle, sv_bb);
+//          ReturnInst::Create(F.getContext(), ConstantInt::get(i32, 1), fake);
           BranchInst::Create(BBs.front(), fake);
           BBs.front()->getTerminator()->eraseFromParent();
           BranchInst::Create(tailB, fake, puzzle, BBs.front());
+
+//          if (tailB->getTerminator()->getNumSuccessors() > 1 && ISINSTANCE(tailB->getTerminator(), BranchInst)) {
+//            auto *br = ISINSTANCE(tailB->getTerminator(), BranchInst);
+//            auto *tar1 = ISINSTANCE(br->getOperand(1), BasicBlock), *tar2 = ISINSTANCE(br->getOperand(2), BasicBlock);
+//            auto *old_condition = br->getOperand(0);
+//            auto *new_condition = BinaryOperator::Create(Instruction::BinaryOps::And, old_condition, puzzle, "puzzle", br);
+//            tailB->getTerminator()->eraseFromParent();
+//            BranchInst::Create(tar2, tar1, new_condition, tailB);
+//          }
+
+//          BBs.pop_front();
+//          while (!BBs.empty()) {
+//            auto *bb1 = BBs.front();
+//            auto *sv_bb1 = BasicBlock::Create(F.getContext(), "sv_bb", &F);
+//            auto *fake1 = BasicBlock::Create(F.getContext(), "sv_bb", &F);
+//            auto *tailB1 = bb1->splitBasicBlock(--bb1->end(), "tail");
+//            BranchInst::Create(bb1, fake1, puzzle, sv_bb1);
+//            BranchInst::Create(bb1, fake1);
+//            bb1->getTerminator()->eraseFromParent();
+//            BranchInst::Create(tailB1, fake1, puzzle, bb1);
+//
+//            BBs.pop_front();
+//          }
+//          auto *fst_BB = BBs.front();
+//          BBs.pop_front();
+//          auto *originB = fst_BB->splitBasicBlock(fst_BB->getFirstNonPHIOrDbgOrLifetime(), "originB");
+//          auto groups = alloca_fusor_array(fst_BB, sym_vars, 10);
+//          BBs.push_front(originB);
+//          BBs.push_front(fst_BB);
+
+//          while (False) {
+//            BasicBlock *B = BBs.front();
+//            BBs.pop_front();
+//            BasicBlock *originB = B->splitBasicBlock(B->getFirstNonPHIOrDbgOrLifetime(), "originB");
+//
+//            BasicBlock *bb = BasicBlock::Create(F.getContext(), "fake", &F);
+//            B->getTerminator()->eraseFromParent();
+//            vector<Value *> cmp_res;
+//            for (auto g : groups) {
+//              Value *idx[2] = {ConstantInt::get(i8, 0), g.true_index};
+//              auto af = ArrayRef<Value *>(idx, (size_t) 2);
+//              auto *ptr1 = GetElementPtrInst::CreateInBounds(g.fst_array, af, "ptr1", B);
+//              auto *index = new LoadInst(ptr1, "index", B);
+//              idx[1] = index;
+//              auto *ptr2 = GetElementPtrInst::CreateInBounds(g.scd_array, af, "ptr2", B);
+//              auto *data = new LoadInst(ptr2, "data", B);
+//              auto *cmp = new ICmpInst(*B, CmpInst::ICMP_SGT, data, ConstantInt::get(i8, 0), "res");
+//              cmp_res.emplace_back(cmp);
+//            }
+//            auto *cmp = cmp_res.back();
+//            cmp_res.pop_back();
+//            while (!cmp_res.empty()) {
+//              auto *rhs = cmp_res.back();
+//              cmp_res.pop_back();
+//              cmp = BinaryOperator::Create(Instruction::And, cmp, rhs, "cmp", B);
+//            }
+//            BranchInst::Create(originB, bb, cmp, B);
+//
+//            auto *tailB = originB->splitBasicBlock(--originB->end(), "tailB");
+//            originB->getTerminator()->eraseFromParent();
+//            BranchInst::Create(tailB, bb, cmp, originB);
+//
+//            BranchInst::Create(originB, bb);
+//          }
+//          errs() << groups.size();
+
+//          for (auto &B : F)
+//            around_half_div(&B);
+
+//          for (auto &B : F) {
+//            errs() << B.getName() << ": pre={";
+//            for (BasicBlock *p : predecessors(&B))
+//              errs() << p->getName() << ",";
+//            errs() << "\b} suc={";
+//
+//            for (BasicBlock *s : successors(&B))
+//              errs() << s->getName() << ",";
+//            errs() << "\b}\n";
+//          }
 
           errs() << "====== DONE ======\n";
           return True;
@@ -427,14 +513,14 @@ namespace {
     };
 }
 
-char FusorPass::ID = 0;
+char ArrayPass::ID = 0;
 
-static RegisterPass<FusorPass> X("fusor", "Fusor Pass", False, False);
+static RegisterPass<ArrayPass> X("fusor", "Array Pass", False, False);
 
 // Automatically enable the pass.
 // http://adriansampson.net/blog/clangpass.html
-static void registerFusorPass(const PassManagerBuilder &, legacy::PassManagerBase &PM) {
-  PM.add(new FusorPass());
+static void registerArrayPass(const PassManagerBuilder &, legacy::PassManagerBase &PM) {
+  PM.add(new ArrayPass());
 }
 
-static RegisterStandardPasses RegisterMyPass(PassManagerBuilder::EP_EarlyAsPossible, registerFusorPass);
+static RegisterStandardPasses RegisterMyPass(PassManagerBuilder::EP_EarlyAsPossible, registerArrayPass);
