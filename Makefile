@@ -1,7 +1,10 @@
 prefix=_fusor
 
-pass:
+pass: build
 	@cd build && cmake .. && make -j2
+
+build:
+	@mkdir build
 
 opt: example.bc
 	@opt-3.8 -load build/fusor/libFusorPass.so -array example.bc > /dev/null
