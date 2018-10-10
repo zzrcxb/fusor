@@ -27,3 +27,6 @@ test: pass
 		make clean >/dev/null 2>/dev/null; \
 		cd ../..; \
 	done;
+
+clean:
+	rm -f *.bc *.ll *.out *.s *.dot

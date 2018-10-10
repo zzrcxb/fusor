@@ -523,4 +523,5 @@ static void registerArrayPass(const PassManagerBuilder &, legacy::PassManagerBas
   PM.add(new ArrayPass());
 }
 
-static RegisterStandardPasses RegisterMyPass(PassManagerBuilder::EP_EarlyAsPossible, registerArrayPass);
+static RegisterStandardPasses RegisterMyPass(PassManagerBuilder::EP_EnabledOnOptLevel0, registerArrayPass);
+static RegisterStandardPasses RegisterMyPass2(PassManagerBuilder::EP_OptimizerLast, registerArrayPass);
