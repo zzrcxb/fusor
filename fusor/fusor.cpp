@@ -515,7 +515,7 @@ namespace {
 
 char ArrayPass::ID = 0;
 
-static RegisterPass<ArrayPass> X("fusor", "Array Pass", False, False);
+static RegisterPass<ArrayPass> X("fusor", "Fusor Pass", False, False);
 
 // Automatically enable the pass.
 // http://adriansampson.net/blog/clangpass.html
@@ -523,5 +523,5 @@ static void registerArrayPass(const PassManagerBuilder &, legacy::PassManagerBas
   PM.add(new ArrayPass());
 }
 
-static RegisterStandardPasses RegisterMyPass(PassManagerBuilder::EP_EnabledOnOptLevel0, registerArrayPass);
+static RegisterStandardPasses RegisterMyPass1(PassManagerBuilder::EP_EnabledOnOptLevel0, registerArrayPass);
 static RegisterStandardPasses RegisterMyPass2(PassManagerBuilder::EP_OptimizerLast, registerArrayPass);
