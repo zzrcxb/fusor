@@ -33,17 +33,18 @@ def run_symexe(path, argv_size=2, show_bytes=True, show_model=False):
     results = []
     for dd in pg.deadended:
         res = dd.solver.eval(sym_argv, cast_to=bytes)
+        results.append(res)
         print(res)
-        res = ''.join([chr(c) for c in res])
-        print(res)
+        # res = ''.join([chr(c) for c in res])
+        # print(res)
         if show_bytes:
-            print(colored('[+] New Input: ' + res + ' |', 'green'))
-            print(colored('ASCII:', 'cyan'), end="")
-            for char in res:
-                print(colored(ord(char), 'cyan'), end=" ")
-            print('')
+            print(colored(b'[+] New Input: ' + res + b' |', 'green'))
+            # print(colored('ASCII:', 'cyan'), end="")
+            # for char in res:
+            #     print(colored(ord(char), 'cyan'), end=" ")
+            # print('')
             if show_model:
-                print(colored(str(dd.state.se.constraints), 'yellow'))
+                print(colored(str(dd.solver.constraints), 'yellow'))
         else:
             print(colored('[+] New Input: ' + res, 'green'))
 
@@ -97,12 +98,13 @@ if __name__ == '__main__':
     #     writer.writerow([args.file_path, ] + [tohex(_) for _ in results])
 
     tests = []
+    print(results, args.run_program)
     if results is not None and args.run_program:
         bin_dir, filename = os.path.split(args.file_path)
         for i, res in enumerate(results):
             print(colored('[*] Result ' + str(i + 1) + ':', 'yellow'))
-            res = res.split('\x00')[0]
-            print('Calling: ' + ' '.join([os.path.join(bin_dir, filename), res]))
+            res = res.split(b'\x00')[0]
+            # print('Calling: ' + ' '.join([os.path.join(bin_dir, filename), res]))
             pipe = subprocess.Popen([os.path.join(bin_dir, filename), res])
             single_run = pipe.wait()
             output = 'return value:' + str(single_run) + '\n'

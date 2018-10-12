@@ -1,13 +1,13 @@
 pass:
 	@cd build && cmake .. && make -j2
 
-build:
-	@mkdir build
+opt: rebuild
+	@opt-3.8 -load build/fusor/libFusorPass.so -fusor example.bc | llvm-dis-3.8 | tee out.ll
 
-opt: example.bc
-	@opt-3.8 -load build/fusor/libFusorPass.so -array example.bc > /dev/null
+assembly:
+	@llc-3.8 out.ll && clang out.s
 
-rebuild: example.c
+rebuild: example.c pass
 	@clang -S -emit-llvm example.c
 	@clang -c -emit-llvm example.c
 
