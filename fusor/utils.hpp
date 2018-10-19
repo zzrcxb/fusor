@@ -24,6 +24,22 @@
 #define SYMVAR_FUNC "fusor_symvar"
 
 
+const auto *Int1 = llvm::Type::getInt1Ty(llvm::getGlobalContext());
+const auto *Int1_ptr = llvm::Type::getInt1PtrTy(llvm::getGlobalContext());
+const auto *Int8 = llvm::Type::getInt8Ty(llvm::getGlobalContext());
+const auto *Int8_ptr = llvm::Type::getInt8PtrTy(llvm::getGlobalContext());
+const auto *Int16 = llvm::Type::getInt16Ty(llvm::getGlobalContext());
+const auto *Int16_ptr = llvm::Type::getInt16PtrTy(llvm::getGlobalContext());
+const auto *Int32 = llvm::Type::getInt32Ty(llvm::getGlobalContext());
+const auto *Int32_ptr = llvm::Type::getInt32PtrTy(llvm::getGlobalContext());
+const auto *Int64 = llvm::Type::getInt64Ty(llvm::getGlobalContext());
+const auto *Int64_ptr = llvm::Type::getInt64PtrTy(llvm::getGlobalContext());
+const auto *Float = llvm::Type::getFloatTy(llvm::getGlobalContext());
+const auto *Float_ptr = llvm::Type::getFloatPtrTy(llvm::getGlobalContext());
+const auto *Double = llvm::Type::getDoubleTy(llvm::getGlobalContext());
+const auto *Double_ptr = llvm::Type::getDoublePtrTy(llvm::getGlobalContext());
+
+
 struct SymVar {
     llvm::Instruction *start_point = nullptr;
     llvm::Value *var = nullptr;
