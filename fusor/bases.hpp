@@ -8,6 +8,8 @@
 #include "llvm/IR/Value.h"
 #include "llvm/IR/Function.h"
 #include "llvm/IR/BasicBlock.h"
+#include "utils.hpp"
+
 
 enum BuilderType {
   MODULE = 1,
@@ -23,9 +25,9 @@ public:
 
     PuzzleBuilder(BuilderType bt, int weight=10) : type(bt), weight(weight) {}
 
-    virtual llvm::Value* build(llvm::Module &M) = 0;
-    virtual llvm::Value* build(llvm::Function &F) = 0;
-    virtual llvm::Value* build(llvm::BasicBlock &B) = 0;
+    virtual llvm::Value* build(llvm::Module &M, SymvarLoc &svs_locs, llvm::Instruction* insert_point) = 0;
+    virtual llvm::Value* build(llvm::Function &F, SymvarLoc &svs_locs, llvm::Instruction* insert_point) = 0;
+    virtual llvm::Value* build(llvm::BasicBlock &B, SymvarLoc &svs_locs, llvm::Instruction* insert_point) = 0;
 };
 
 
@@ -36,9 +38,9 @@ public:
 
     Transformer(BuilderType bt, int weight=10) : type(bt), weight(weight) {}
 
-    virtual llvm::Module* transform(llvm::Module &M) = 0;
-    virtual llvm::Function* transform(llvm::Function &F) = 0;
-    virtual llvm::BasicBlock* transform(llvm::BasicBlock &B) = 0;
+    virtual llvm::Module* transform(llvm::Module &M, llvm::Instruction* insert_point) = 0;
+    virtual llvm::Function* transform(llvm::Function &F, llvm::Instruction* insert_point) = 0;
+    virtual llvm::BasicBlock* transform(llvm::BasicBlock &B, llvm::Instruction* insert_point) = 0;
 };
 
 

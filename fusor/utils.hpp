@@ -5,13 +5,17 @@
 #ifndef PROJECT_UTILS_HPP
 #define PROJECT_UTILS_HPP
 
-#include "llvm/IR/InstrTypes.h"
+#include "llvm/Pass.h"
+#include "llvm/IR/LegacyPassManager.h"
 #include "llvm/IR/IRBuilder.h"
 #include "llvm/IR/Function.h"
+#include "llvm/IR/Module.h"
+#include "llvm/IR/BasicBlock.h"
+#include "llvm/IR/InstIterator.h"
+#include "llvm/IR/InstrTypes.h"
 #include "llvm/IR/CallSite.h"
 #include "llvm/IR/Type.h"
-#include "llvm/Pass.h"
-#include "llvm/Transforms/Utils/BasicBlockUtils.h"
+
 #include <vector>
 #include <deque>
 
@@ -23,21 +27,23 @@
 
 #define SYMVAR_FUNC "fusor_symvar"
 
+// get common types
+auto *Int1 = llvm::Type::getInt1Ty(llvm::getGlobalContext());
+auto *Int1_ptr = llvm::Type::getInt1PtrTy(llvm::getGlobalContext());
+auto *Int8 = llvm::Type::getInt8Ty(llvm::getGlobalContext());
+auto *Int8_ptr = llvm::Type::getInt8PtrTy(llvm::getGlobalContext());
+auto *Int16 = llvm::Type::getInt16Ty(llvm::getGlobalContext());
+auto *Int16_ptr = llvm::Type::getInt16PtrTy(llvm::getGlobalContext());
+auto *Int32 = llvm::Type::getInt32Ty(llvm::getGlobalContext());
+auto *Int32_ptr = llvm::Type::getInt32PtrTy(llvm::getGlobalContext());
+auto *Int64 = llvm::Type::getInt64Ty(llvm::getGlobalContext());
+auto *Int64_ptr = llvm::Type::getInt64PtrTy(llvm::getGlobalContext());
+auto *Float = llvm::Type::getFloatTy(llvm::getGlobalContext());
+auto *Float_ptr = llvm::Type::getFloatPtrTy(llvm::getGlobalContext());
+auto *Double = llvm::Type::getDoubleTy(llvm::getGlobalContext());
+auto *Double_ptr = llvm::Type::getDoublePtrTy(llvm::getGlobalContext());
 
-const auto *Int1 = llvm::Type::getInt1Ty(llvm::getGlobalContext());
-const auto *Int1_ptr = llvm::Type::getInt1PtrTy(llvm::getGlobalContext());
-const auto *Int8 = llvm::Type::getInt8Ty(llvm::getGlobalContext());
-const auto *Int8_ptr = llvm::Type::getInt8PtrTy(llvm::getGlobalContext());
-const auto *Int16 = llvm::Type::getInt16Ty(llvm::getGlobalContext());
-const auto *Int16_ptr = llvm::Type::getInt16PtrTy(llvm::getGlobalContext());
-const auto *Int32 = llvm::Type::getInt32Ty(llvm::getGlobalContext());
-const auto *Int32_ptr = llvm::Type::getInt32PtrTy(llvm::getGlobalContext());
-const auto *Int64 = llvm::Type::getInt64Ty(llvm::getGlobalContext());
-const auto *Int64_ptr = llvm::Type::getInt64PtrTy(llvm::getGlobalContext());
-const auto *Float = llvm::Type::getFloatTy(llvm::getGlobalContext());
-const auto *Float_ptr = llvm::Type::getFloatPtrTy(llvm::getGlobalContext());
-const auto *Double = llvm::Type::getDoubleTy(llvm::getGlobalContext());
-const auto *Double_ptr = llvm::Type::getDoublePtrTy(llvm::getGlobalContext());
+typedef std::map<llvm::Value*, llvm::Instruction*> SymvarLoc;
 
 
 struct SymVar {

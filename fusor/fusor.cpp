@@ -1,18 +1,11 @@
-#include "llvm/Pass.h"
-#include "llvm/IR/IRBuilder.h"
-#include "llvm/IR/Function.h"
-#include "llvm/IR/Module.h"
-#include "llvm/IR/LegacyPassManager.h"
-#include "llvm/IR/InstrTypes.h"
-#include "llvm/IR/IRBuilder.h"
-#include "llvm/IR/InstIterator.h"
 #include "llvm/IR/IntrinsicInst.h"
 #include "llvm/Support/raw_ostream.h"
 #include "llvm/Transforms/IPO/PassManagerBuilder.h"
 #include "llvm/Transforms/Utils/BasicBlockUtils.h"
-#include "llvm/IR/CallSite.h"
 #include "llvm/Support/CommandLine.h"
 #include "utils.hpp"
+#include "inheritance.hpp"
+
 #include <algorithm>
 #include <random>
 #include <chrono>
@@ -115,6 +108,7 @@ namespace {
           return result;
         }
 
+
         Value *puzzle2(Instruction *insert_point, map<Value *, Instruction *> svs_loc, size_t sv_cnt = 0) { // 0 for all
           ArrayType *aint = ArrayType::get(i8, ARRAY_SIZE);
           uniform_int_distribution<uint8_t> i8_generator(0, 127);
@@ -201,6 +195,7 @@ namespace {
 
           return result;
         }
+
 
         Value *build_puzzle(Instruction *insert_point, map<Value *, Instruction *> svs_loc, size_t num_nested = 2) {
           ArrayType *aint = ArrayType::get(i8, ARRAY_SIZE);
@@ -290,6 +285,7 @@ namespace {
           return result;
         }
 
+
         deque<Instruction *> around_half_div(BasicBlock *bdiv, float threshold = .9) {
           set<Instruction *> cannot_move;
           deque<Instruction *> gonna_move;
@@ -324,6 +320,7 @@ namespace {
           return gonna_move;
         }
 
+
         bool insert_randomly(BasicBlock *bins, float threshold, deque<Instruction *> &gonna_move) {
           set<Instruction *> scanned;
           map<Instruction *, Instruction *> iips; // instruction insert points
@@ -354,6 +351,7 @@ namespace {
           return True;
         }
 
+
         vector<Constant *> rand_index_generator(size_t size) {
           vector<Constant *> results(size);
           uniform_int_distribution<uint8_t> generator(0, 255);
@@ -363,8 +361,8 @@ namespace {
           return results;
         }
 
-        inline const map<Value *, Instruction *>
-        move_symvar_to_front(BasicBlock *BB, const vector<Value *> &sym_var) {
+
+        const SymvarLoc move_symvar_to_front(BasicBlock *BB, const vector<Value *> &sym_var) {
           Instruction *insert_point = dyn_cast<Instruction>(BB->begin());
           map<Value *, Instruction *> locations;
 
@@ -389,7 +387,6 @@ namespace {
 
           return locations;
         }
-
 
 
         unsigned seed = static_cast<unsigned>(chrono::system_clock::now().time_since_epoch().count());
