@@ -10,37 +10,46 @@
 #include "llvm/IR/BasicBlock.h"
 #include "utils.hpp"
 
+#include <random>
+
 
 enum BuilderType {
-  MODULE = 1,
-  FUNCTION = 1 << 1,
-  BASICBLOCK = 1 << 2
+    MODULE = 1,
+    FUNCTION = 1 << 1,
+    BASICBLOCK = 1 << 2
 };
 
 
 class PuzzleBuilder {
 public:
     int weight;
-    BuilderType type;
 
-    PuzzleBuilder(BuilderType bt, int weight=10) : type(bt), weight(weight) {}
+    PuzzleBuilder(uint64_t puzzle_code, llvm::Module &M, int weight = 10,
+                  std::default_random_engine *rand_eng = nullptr) :
+            puzzle_code(puzzle_code), module(M), weight(weight), rand_eng(rand_eng) {}
 
-    virtual llvm::Value* build(llvm::Module &M, SymvarLoc &svs_locs, llvm::Instruction* insert_point) = 0;
-    virtual llvm::Value* build(llvm::Function &F, SymvarLoc &svs_locs, llvm::Instruction* insert_point) = 0;
-    virtual llvm::Value* build(llvm::BasicBlock &B, SymvarLoc &svs_locs, llvm::Instruction* insert_point) = 0;
+    virtual llvm::Value *build(SymvarLoc &svs_locs, llvm::Instruction *insert_point) = 0;
+
+protected:
+    llvm::Module &module;
+    std::default_random_engine *rand_eng;
+    uint64_t puzzle_code;
 };
 
 
-class Transformer {
+template <typename T> class Transformer {
 public:
     int weight;
-    BuilderType type;
 
-    Transformer(BuilderType bt, int weight=10) : type(bt), weight(weight) {}
+    explicit Transformer(uint64_t trans_code, int weight = 10,
+            std::default_random_engine *rand_eng = nullptr) :
+            trans_code(trans_code), weight(weight), rand_eng(rand_eng) {}
 
-    virtual llvm::Module* transform(llvm::Module &M, llvm::Instruction* insert_point) = 0;
-    virtual llvm::Function* transform(llvm::Function &F, llvm::Instruction* insert_point) = 0;
-    virtual llvm::BasicBlock* transform(llvm::BasicBlock &B, llvm::Instruction* insert_point) = 0;
+    virtual T *transform(T *t, llvm::Value *predicate) = 0;
+
+protected:
+    uint64_t trans_code;
+    std::default_random_engine *rand_eng;
 };
 
 

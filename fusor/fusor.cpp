@@ -15,7 +15,23 @@ using namespace std;
 using namespace llvm;
 
 
-cl::opt<int> POOL_SIZE("array_size", cl::desc("Obfuscation fusor's size"), cl::init(63));
+Type* Int1 = llvm::Type::getInt1Ty(llvm::getGlobalContext());
+Type* Int1_ptr = llvm::Type::getInt1PtrTy(llvm::getGlobalContext());
+Type* Int8 = llvm::Type::getInt8Ty(llvm::getGlobalContext());
+Type* Int8_ptr = llvm::Type::getInt8PtrTy(llvm::getGlobalContext());
+Type* Int16 = llvm::Type::getInt16Ty(llvm::getGlobalContext());
+Type* Int16_ptr = llvm::Type::getInt16PtrTy(llvm::getGlobalContext());
+Type* Int32 = llvm::Type::getInt32Ty(llvm::getGlobalContext());
+Type* Int32_ptr = llvm::Type::getInt32PtrTy(llvm::getGlobalContext());
+Type* Int64 = llvm::Type::getInt64Ty(llvm::getGlobalContext());
+Type* Int64_ptr = llvm::Type::getInt64PtrTy(llvm::getGlobalContext());
+Type* Float = llvm::Type::getFloatTy(llvm::getGlobalContext());
+Type* Float_ptr = llvm::Type::getFloatPtrTy(llvm::getGlobalContext());
+Type* Double = llvm::Type::getDoubleTy(llvm::getGlobalContext());
+Type* Double_ptr = llvm::Type::getDoublePtrTy(llvm::getGlobalContext());
+
+
+cl::opt<int> POOL_SIZE("array_size", cl::desc("Obfuscation fusor's size"), cl::init(64));
 
 namespace {
     struct FusorPass : public ModulePass {
@@ -33,7 +49,7 @@ namespace {
 
             rand_engine.seed(++seed);
 
-            errs() << "Obfuscating \"" << F.getName() << "\" with fusor size " << (int) ARRAY_SIZE << "\t";
+            errs() << "Obfuscating \"" << F.getName() << "\" with fusor size " << (int) ARRAY_SIZE << "\n";
 
             // Initialize
             for (auto &a : F.args())
@@ -52,16 +68,19 @@ namespace {
             auto svs_loc = move_symvar_to_front(sv_bb, sym_vars);
             // after moving, then you can do whatever you want with symvar
 
-            auto *puzzle = puzzle2(sv_bb->getTerminator(), svs_loc);
-            auto *fake = BasicBlock::Create(F.getContext(), "sv_bb", &F);
-            auto *tailB = BBs.front()->splitBasicBlock(--BBs.front()->end(), "tail");
-            sv_bb->getTerminator()->eraseFromParent();
-            BranchInst::Create(BBs.front(), fake, puzzle, sv_bb);
+            auto * dpap = new DeepArrayPuzzle((uint64_t)131328 + ARRAY_SIZE, M, &rand_engine);
+            dpap->build(svs_loc, sv_bb->getTerminator());
+//            auto *puzzle = puzzle2(sv_bb->getTerminator(), svs_loc);
+//            auto *fake = BasicBlock::Create(F.getContext(), "sv_bb", &F);
+//            auto *tailB = BBs.front()->splitBasicBlock(--BBs.front()->end(), "tail");
+//            sv_bb->getTerminator()->eraseFromParent();
+//            BranchInst::Create(BBs.front(), fake, puzzle, sv_bb);
 
 //            ReturnInst::Create(F.getContext(), ConstantInt::get(i32, 1), fake);
-            BranchInst::Create(BBs.front(), fake);
-            BBs.front()->getTerminator()->eraseFromParent();
-            BranchInst::Create(tailB, fake, puzzle, BBs.front());
+
+//            BranchInst::Create(BBs.front(), fake);
+//            BBs.front()->getTerminator()->eraseFromParent();
+//            BranchInst::Create(tailB, fake, puzzle, BBs.front());
 
             errs() << "====== DONE ======\n";
           }

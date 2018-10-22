@@ -19,4 +19,4 @@ md5.o_fusor: md5.c
 clean:
 	@rm -f md5 fusor
 	@rm -f md5_stdout fusor_stdout
-	@rm -f *.ll *.bc *.s *.o *.out *.txt
+	@rm -f *.ll *.bc *.s *.o *.out *.txt *.o-*

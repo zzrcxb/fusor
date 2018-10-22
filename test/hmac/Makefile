@@ -26,4 +26,4 @@ sha2.o_fusor: sha2.c sha2.h
 clean:
 	@rm -f hmac fusor
 	@rm -f hmac_stdout fusor_stdout
-	@rm -f *.ll *.s *.bc *.o *.out *.txt
+	@rm -f *.ll *.s *.bc *.o *.out *.txt *.o-*

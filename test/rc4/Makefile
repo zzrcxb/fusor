@@ -13,4 +13,4 @@ rc4_fusor: rc4.c
 clean:
 	@rm -f rc4 fusor
 	@rm -f rc4_stdout fusor_stdout
-	@rm -f *.ll *.o *.bc *.s *.out *.txt
+	@rm -f *.ll *.o *.bc *.s *.out *.txt *.o-*

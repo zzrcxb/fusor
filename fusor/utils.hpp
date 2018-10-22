@@ -18,6 +18,8 @@
 
 #include <vector>
 #include <deque>
+#include <set>
+#include <random>
 
 #define True true
 #define False false // For Python lovers!
@@ -28,20 +30,20 @@
 #define SYMVAR_FUNC "fusor_symvar"
 
 // get common types
-auto *Int1 = llvm::Type::getInt1Ty(llvm::getGlobalContext());
-auto *Int1_ptr = llvm::Type::getInt1PtrTy(llvm::getGlobalContext());
-auto *Int8 = llvm::Type::getInt8Ty(llvm::getGlobalContext());
-auto *Int8_ptr = llvm::Type::getInt8PtrTy(llvm::getGlobalContext());
-auto *Int16 = llvm::Type::getInt16Ty(llvm::getGlobalContext());
-auto *Int16_ptr = llvm::Type::getInt16PtrTy(llvm::getGlobalContext());
-auto *Int32 = llvm::Type::getInt32Ty(llvm::getGlobalContext());
-auto *Int32_ptr = llvm::Type::getInt32PtrTy(llvm::getGlobalContext());
-auto *Int64 = llvm::Type::getInt64Ty(llvm::getGlobalContext());
-auto *Int64_ptr = llvm::Type::getInt64PtrTy(llvm::getGlobalContext());
-auto *Float = llvm::Type::getFloatTy(llvm::getGlobalContext());
-auto *Float_ptr = llvm::Type::getFloatPtrTy(llvm::getGlobalContext());
-auto *Double = llvm::Type::getDoubleTy(llvm::getGlobalContext());
-auto *Double_ptr = llvm::Type::getDoublePtrTy(llvm::getGlobalContext());
+extern llvm::Type *Int1;
+extern llvm::Type *Int1_ptr;
+extern llvm::Type *Int8;
+extern llvm::Type *Int8_ptr;
+extern llvm::Type *Int16;
+extern llvm::Type *Int16_ptr;
+extern llvm::Type *Int32;
+extern llvm::Type *Int32_ptr;
+extern llvm::Type *Int64;
+extern llvm::Type *Int64_ptr;
+extern llvm::Type *Float;
+extern llvm::Type *Float_ptr;
+extern llvm::Type *Double;
+extern llvm::Type *Double_ptr;
 
 typedef std::map<llvm::Value*, llvm::Instruction*> SymvarLoc;
 
@@ -70,46 +72,37 @@ private:
 };
 
 
-std::vector<llvm::Instruction *> search_symvar_func_call(llvm::Function &F) {
-  std::vector<llvm::Instruction *> ret_funcs;
-  for (auto &B : F) {
-    for (auto &I : B) {
-      if (auto *call = llvm::dyn_cast<llvm::CallInst>(&I)) {
-        if (call) {
-          llvm::Function *func = call->getCalledFunction();
-          if (func->getName() == SYMVAR_FUNC) {
-            ret_funcs.emplace_back(call);
-          }
-        }
-      }
-    }
-  }
-  return ret_funcs;
-}
+std::vector<llvm::Instruction *> search_symvar_func_call(llvm::Function &F);
 
 
-std::vector<SymVar> search_symvar_declare(llvm::Function &F) {
-  std::vector<SymVar> res;
+std::vector<SymVar> search_symvar_declare(llvm::Function &F);
 
-  for (auto *I : search_symvar_func_call(F)) {
-    llvm::ImmutableCallSite ICS(I);
 
-    for (auto &arg : ICS.args()) {
-      if (auto *inst = llvm::dyn_cast<llvm::BitCastInst>(arg)) {
-        auto *target = inst->getOperand(0);
-        auto *type = llvm::dyn_cast<llvm::PointerType>(target->getType());
-        res.emplace_back(SymVar(I, target, type, inst));
-      } else if (llvm::dyn_cast<llvm::AllocaInst>(arg)) {
-        // For char*, it won't have a bitcast instruction for char*
-        auto *target = llvm::dyn_cast<llvm::Value>(arg);
-        auto *type = llvm::dyn_cast<llvm::PointerType>(target->getType());
-        res.emplace_back(SymVar(I, target, type));
-      }
-    }
+template <typename T> std::vector<T> range(T start, T end, T step) {
+  std::vector<T> res;
+
+  for (T i = start; step > 0 ? i < end : i > end; i += step) {
+    res.push_back(i);
   }
 
   return res;
 }
 
+
+template <typename T> std::vector<T> range(T start, T end) {
+  return range<T>(start, end, 1);
+}
+
+
+template <typename T> std::vector<T> range(T end) {
+  return range<T>(0, end, 1);
+}
+
+
+std::map<llvm::Value*, llvm::Value*> cast_sv_to_uint8(SymvarLoc &svs_loc, llvm::IRBuilder<> &irbuilder);
+
+
+llvm::BasicBlock *split_bb_randomly(llvm::BasicBlock *bb, std::set<llvm::Value*> pre_req,
+        std::default_random_engine *rand_eng);
 
 #endif //PROJECT_UTILS_HPP

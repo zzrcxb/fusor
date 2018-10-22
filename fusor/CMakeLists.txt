@@ -1,6 +1,6 @@
 add_library(FusorPass MODULE
     # List your source files here.
-        fusor.cpp utils.hpp array.cpp bases.hpp inheritance.hpp)
+        fusor.cpp utils.hpp pred/array.cpp bases.hpp inheritance.hpp utils.cpp trans/bogus.cpp)
 
 # Use C++11 to compile our pass (i.e., supply -std=c++11).
 target_compile_features(FusorPass PRIVATE cxx_range_for cxx_auto_type)
@@ -9,11 +9,3 @@ target_compile_features(FusorPass PRIVATE cxx_range_for cxx_auto_type)
 set_target_properties(FusorPass PROPERTIES
     COMPILE_FLAGS "-fno-rtti"
 )
-
-# Get proper shared-library behavior (where symbols are not necessarily
-# resolved when the shared library is linked) on OS X.
-if(APPLE)
-    set_target_properties(FusorPass PROPERTIES
-        LINK_FLAGS "-undefined dynamic_lookup"
-    )
-endif(APPLE)

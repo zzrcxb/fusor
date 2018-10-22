@@ -13,4 +13,4 @@ sha1_fusor: main.c sha1.c rtlib.c
 clean:
 	@rm -f sha1 fusor
 	@rm -f sha1_stdout fusor_stdout
-	@rm -f *.ll *.bc *.o *.s *.out *.txt
+	@rm -f *.ll *.bc *.o *.s *.out *.txt *.o-*

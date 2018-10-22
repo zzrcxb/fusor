@@ -13,4 +13,4 @@ aes_fusor: aes.c
 clean:
 	@rm -f aes fusor
 	@rm -f aes_stdout fusor_stdout
-	@rm -f *.ll *.bc *.s *.o *.out *.txt
+	@rm -f *.ll *.bc *.s *.o *.out *.txt *.o-*
