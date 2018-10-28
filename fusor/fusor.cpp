@@ -29,6 +29,7 @@ Type* Float = llvm::Type::getFloatTy(llvm::getGlobalContext());
 Type* Float_ptr = llvm::Type::getFloatPtrTy(llvm::getGlobalContext());
 Type* Double = llvm::Type::getDoubleTy(llvm::getGlobalContext());
 Type* Double_ptr = llvm::Type::getDoublePtrTy(llvm::getGlobalContext());
+Type* Void = llvm::Type::getVoidTy(getGlobalContext());
 
 
 cl::opt<int> POOL_SIZE("array_size", cl::desc("Obfuscation fusor's size"), cl::init(64));
@@ -68,9 +69,9 @@ namespace {
             auto svs_loc = move_symvar_to_front(sv_bb, sym_vars);
             // after moving, then you can do whatever you want with symvar
 
-//            auto *dpap = new DeepArrayPuzzle((uint64_t)131328 + ARRAY_SIZE, M, &rand_engine);
-//            auto *predicate =  dpap->build(svs_loc, sv_bb->getTerminator());
-            auto *predicate = puzzle2(sv_bb->getTerminator(), svs_loc);
+            auto *dpap = new DeepArrayPuzzle((uint64_t)328448 + ARRAY_SIZE, M, &rand_engine);
+            auto *predicate =  dpap->build(svs_loc, sv_bb->getTerminator());
+//            auto *predicate = puzzle2(sv_bb->getTerminator(), svs_loc);
             auto *bogus = new BogusCFGTransformer(356, 10, &rand_engine);
             bogus->transform(&F, predicate);
 

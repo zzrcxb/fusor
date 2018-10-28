@@ -10,6 +10,10 @@ aes: aes.c
 aes_fusor: aes.c
 	@$(CC) $(CC_FLAG) aes.c -o fusor
 
+log:
+	@$(CC) $(CC_FLAG) -c -g aes.c
+	@$(CC) -g aes.o ../../rtlib.o -o fusor
+
 clean:
 	@rm -f aes fusor
 	@rm -f aes_stdout fusor_stdout

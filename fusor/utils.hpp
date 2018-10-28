@@ -15,6 +15,8 @@
 #include "llvm/IR/InstrTypes.h"
 #include "llvm/IR/CallSite.h"
 #include "llvm/IR/Type.h"
+#include "llvm/Transforms/IPO/PassManagerBuilder.h"
+#include "llvm/Transforms/Utils/BasicBlockUtils.h"
 
 #include <vector>
 #include <deque>
@@ -44,6 +46,7 @@ extern llvm::Type *Float;
 extern llvm::Type *Float_ptr;
 extern llvm::Type *Double;
 extern llvm::Type *Double_ptr;
+extern llvm::Type *Void;
 
 typedef std::map<llvm::Value*, llvm::Instruction*> SymvarLoc;
 

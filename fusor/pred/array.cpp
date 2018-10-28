@@ -12,12 +12,23 @@ using namespace std;
 using namespace llvm;
 
 
+Constant *build_log(string name, Module *M) {
+  vector<Type*> paramTypes = {Int8, };
+  auto *retType = Void;
+  FunctionType *logFuncType = FunctionType::get(retType, paramTypes, False);
+  Constant *logFunc = M->getOrInsertFunction(name, logFuncType);
+  return logFunc;
+}
+
+
 Value* DeepArrayPuzzle::build(SymvarLoc &svs_locs, Instruction* insert_point) {
   ArrayType *a_type = ArrayType::get(Int8, array_size);
   vector<vector<uint8_t>> a_data;
 
   if (!insert_point)
     return nullptr;
+
+  rand_eng->seed(100);
 
   // array builder
   for (auto _ : range<int>(0, fst_depth + scd_depth)) {
@@ -53,12 +64,15 @@ Value* DeepArrayPuzzle::build(SymvarLoc &svs_locs, Instruction* insert_point) {
   vector<pair<Value*, Value*>> load_res;
   for (auto &p : cast_sv_to_uint8(svs_locs, irbuilder)) {
     auto *sv = p.first;
-    auto *loaded = p.second;
+    auto *loaded = irbuilder.CreateAnd(p.second, ConstantInt::get(Int8, 127));
     Value *fst_index, *scd_index;
 
     // first level
     auto *res = loaded;
     for (auto i : range<int>(fst_depth)) {
+      if (array_size != 128) {
+        res = irbuilder.CreateURem(res, ConstantInt::get(Int8, array_size));
+      }
       array_ref_array[1] = res;
       auto inbound_index = ArrayRef<Value *>(array_ref_array, 2);
       res = irbuilder.CreateInBoundsGEP(glb_arrays[i], inbound_index, "index");
@@ -89,3 +103,4 @@ Value* DeepArrayPuzzle::build(SymvarLoc &svs_locs, Instruction* insert_point) {
 
   return b_res;
 }
+
