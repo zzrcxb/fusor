@@ -68,8 +68,12 @@ namespace {
             auto svs_loc = move_symvar_to_front(sv_bb, sym_vars);
             // after moving, then you can do whatever you want with symvar
 
-            auto * dpap = new DeepArrayPuzzle((uint64_t)131328 + ARRAY_SIZE, M, &rand_engine);
-            dpap->build(svs_loc, sv_bb->getTerminator());
+//            auto *dpap = new DeepArrayPuzzle((uint64_t)131328 + ARRAY_SIZE, M, &rand_engine);
+//            auto *predicate =  dpap->build(svs_loc, sv_bb->getTerminator());
+            auto *predicate = puzzle2(sv_bb->getTerminator(), svs_loc);
+            auto *bogus = new BogusCFGTransformer(356, 10, &rand_engine);
+            bogus->transform(&F, predicate);
+
 //            auto *puzzle = puzzle2(sv_bb->getTerminator(), svs_loc);
 //            auto *fake = BasicBlock::Create(F.getContext(), "sv_bb", &F);
 //            auto *tailB = BBs.front()->splitBasicBlock(--BBs.front()->end(), "tail");

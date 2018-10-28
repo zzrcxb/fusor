@@ -105,4 +105,8 @@ std::map<llvm::Value*, llvm::Value*> cast_sv_to_uint8(SymvarLoc &svs_loc, llvm::
 llvm::BasicBlock *split_bb_randomly(llvm::BasicBlock *bb, std::set<llvm::Value*> pre_req,
         std::default_random_engine *rand_eng);
 
+
+llvm::BasicBlock *fake_bb_builder(llvm::BasicBlock *base_bb, std::vector<llvm::Instruction*> seed);
+
+
 #endif //PROJECT_UTILS_HPP

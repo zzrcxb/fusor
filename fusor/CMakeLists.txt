@@ -1,6 +1,6 @@
 add_library(FusorPass MODULE
     # List your source files here.
-        fusor.cpp utils.hpp pred/array.cpp bases.hpp inheritance.hpp utils.cpp trans/bogus.cpp)
+        fusor.cpp utils.hpp pred/array.cpp bases.hpp inheritance.hpp utils.cpp trans/bogus.cpp factories.hpp)
 
 # Use C++11 to compile our pass (i.e., supply -std=c++11).
 target_compile_features(FusorPass PRIVATE cxx_range_for cxx_auto_type)

@@ -35,8 +35,10 @@ public:
     explicit BogusCFGTransformer(uint64_t trans_code, int weight=10,
             std::default_random_engine *rand_eng = nullptr) :
             Transformer(trans_code, weight) {
-      obf_prob = static_cast<uint8_t>(trans_code % 100);
-      obf_times = static_cast<uint8_t>((trans_code >> 8) % 256);
+//      obf_prob = static_cast<uint8_t>(trans_code % 100);
+//      obf_times = static_cast<uint8_t>((trans_code >> 8) % 256);
+      obf_prob = 30;
+      obf_times = 3;
     }
 
     llvm::Function *transform(llvm::Function *F, llvm::Value *predicate) override;
