@@ -72,13 +72,18 @@ namespace {
 
 //            auto *dpap = new DeepArrayPuzzle((uint64_t)328448 + ARRAY_SIZE, &M);
 //            auto *predicate =  dpap->build(svs_loc, sv_bb->getTerminator());
-            PuzzleBuilderFactory factory;
-            string id = "DeepArrayPuzzle";
-            auto builder = factory.get_builder(id, (uint64_t)328448 + ARRAY_SIZE, &M);
-            auto *predicate = builder->build(svs_loc, sv_bb->getTerminator());
+            PuzzleBuilderFactory pz_factory;
+            string pz_id = "DeepArrayPuzzle";
+            auto pz_builder = pz_factory.get_builder(pz_id, (uint64_t)328448 + ARRAY_SIZE, &M);
+            auto *predicate = pz_builder->build(svs_loc, sv_bb->getTerminator());
 //            auto *predicate = puzzle2(sv_bb->getTerminator(), svs_loc);
-            auto *bogus = new BogusCFGTransformer(356);
-            bogus->transform(&F, predicate);
+            FunctionTransformerFactory tr_factory;
+            string tr_id = "BogusCFGTransformer";
+            auto tr_builder = tr_factory.get_transformer(tr_id, 356);
+            tr_builder->transform(&F, predicate);
+
+//            auto *bogus = new BogusCFGTransformer(356);
+//            bogus->transform(&F, predicate);
 
             errs() << "====== DONE ======\n";
           }

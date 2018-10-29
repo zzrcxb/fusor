@@ -23,7 +23,7 @@ public:
       return puzzles[id]->clone(puzzle_code, M);
     }
 
-    std::unique_ptr<PuzzleBuilder> get_builder_weighted(uint64_t, llvm::Module&);
+    std::unique_ptr<PuzzleBuilder> get_builder_randomly(uint64_t, llvm::Module&);
 
 private:
     std::map<std::string, std::unique_ptr<PuzzleBuilder>> puzzles;
@@ -31,8 +31,23 @@ private:
 };
 
 
-class TransformerFactory {
+class FunctionTransformerFactory {
+public:
+    FunctionTransformerFactory() {
+      transes[BogusCFGTransformer::id] = std::make_unique<BogusCFGTransformer>();
 
+      rand_eng.seed(static_cast<unsigned>(std::chrono::system_clock::now().time_since_epoch().count()));
+    }
+
+    std::unique_ptr<Transformer<llvm::Function>> get_transformer(std::string &id, uint64_t trans_code) {
+      return transes[id]->clone(trans_code);
+    }
+
+    std::unique_ptr<Transformer<llvm::Function>> get_transformer_randomly();
+
+private:
+    std::map<std::string, std::unique_ptr<Transformer<llvm::Function>>> transes;
+    std::default_random_engine rand_eng;
 };
 
 

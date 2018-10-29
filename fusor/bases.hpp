@@ -14,19 +14,15 @@
 #include <initializer_list>
 
 
-enum BuilderType {
-    MODULE = 1,
-    FUNCTION = 1 << 1,
-    BASICBLOCK = 1 << 2
-};
-
-
 class PuzzleBuilder {
 public:
     const static int weight;
     const static std::string id;
 
-    PuzzleBuilder() = default;
+    PuzzleBuilder() {
+      puzzle_code = 0;
+      module = nullptr;
+    }
 
     PuzzleBuilder(uint64_t puzzle_code, llvm::Module *M) :
             puzzle_code(puzzle_code), module(M) {}
@@ -45,6 +41,10 @@ template <typename T> class Transformer {
 public:
     const static int weight;
     const static std::string id;
+
+    Transformer() {
+      trans_code = 0;
+    }
 
     explicit Transformer(uint64_t trans_code) : trans_code(trans_code) {}
 

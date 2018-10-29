@@ -15,7 +15,9 @@ public:
     const static int weight;
     const static std::string id;
 
-    DeepArrayPuzzle() = default;
+    DeepArrayPuzzle() {
+      array_size = 64; fst_depth = 3; scd_depth = 5;
+    }
 
     DeepArrayPuzzle(uint64_t puzzle_code, llvm::Module *M) : PuzzleBuilder(puzzle_code, M) {
       array_size = static_cast<uint8_t>(puzzle_code % 256);
@@ -42,6 +44,10 @@ class BogusCFGTransformer : public Transformer<llvm::Function> {
 public:
     const static int weight;
     const static std::string id;
+
+    BogusCFGTransformer() {
+      obf_times = 1; obf_prob = 50;
+    }
 
     explicit BogusCFGTransformer(uint64_t trans_code) : Transformer(trans_code) {
       obf_prob = static_cast<uint8_t>(trans_code % 256);
