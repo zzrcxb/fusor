@@ -12,6 +12,9 @@ using namespace std;
 using namespace llvm;
 
 
+const string DeepArrayPuzzle::id = "DeepArrayPuzzle";
+const int DeepArrayPuzzle::weight = 10;
+
 Constant *build_log(string name, Module *M) {
   vector<Type*> paramTypes = {Int8, };
   auto *retType = Void;
@@ -28,12 +31,10 @@ Value* DeepArrayPuzzle::build(SymvarLoc &svs_locs, Instruction* insert_point) {
   if (!insert_point)
     return nullptr;
 
-  rand_eng->seed(100);
-
   // array builder
   for (auto _ : range<int>(0, fst_depth + scd_depth)) {
     a_data.push_back(range<uint8_t>(0, array_size));
-    shuffle(a_data[_].begin(), a_data[_].end(), *rand_eng);
+    shuffle(a_data[_].begin(), a_data[_].end(), rand_eng);
   }
 
   for (auto i : range<int>(array_size)) {
@@ -52,7 +53,7 @@ Value* DeepArrayPuzzle::build(SymvarLoc &svs_locs, Instruction* insert_point) {
     for (auto n : a_data[_])
       data_row.push_back(ConstantInt::get(Int8, n));
 
-    auto *tmp = new GlobalVariable(module, a_type, True, GlobalVariable::InternalLinkage,
+    auto *tmp = new GlobalVariable(*module, a_type, True, GlobalVariable::InternalLinkage,
       ConstantArray::get(a_type, data_row), "fusor");
     glb_arrays.push_back(tmp);
   }
@@ -104,3 +105,6 @@ Value* DeepArrayPuzzle::build(SymvarLoc &svs_locs, Instruction* insert_point) {
   return b_res;
 }
 
+unique_ptr<PuzzleBuilder> DeepArrayPuzzle::clone(uint64_t puzzle_code, llvm::Module *M) {
+  return std::make_unique<DeepArrayPuzzle>(puzzle_code, M);
+}

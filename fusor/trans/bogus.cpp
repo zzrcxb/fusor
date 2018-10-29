@@ -4,12 +4,14 @@
 
 #include "../utils.hpp"
 #include "../inheritance.hpp"
-#include <chrono>
 
 
 using namespace std;
 using namespace llvm;
 
+
+const string BogusCFGTransformer::id = "BogusCFGTransformer";
+const int BogusCFGTransformer::weight = 10;
 
 Function *BogusCFGTransformer::transform(llvm::Function *F, llvm::Value *predicate) {
   uniform_int_distribution<uint8_t> i8_generator(0, 99);
@@ -83,6 +85,12 @@ Function *BogusCFGTransformer::transform(llvm::Function *F, llvm::Value *predica
 
   return F;
 }
+
+
+unique_ptr<Transformer<llvm::Function>> BogusCFGTransformer::clone(uint64_t trans_code) {
+  return std::make_unique<BogusCFGTransformer>(trans_code);
+}
+
 
 BasicBlock *split_bb_randomly(BasicBlock *bb, set<Value *> pre_req, default_random_engine *rand_eng) {
   auto iter_p = bb->begin();

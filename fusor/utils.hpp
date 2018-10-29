@@ -22,6 +22,8 @@
 #include <deque>
 #include <set>
 #include <random>
+#include <chrono>
+#include <memory>
 
 #define True true
 #define False false // For Python lovers!

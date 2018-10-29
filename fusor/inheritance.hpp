@@ -12,44 +12,52 @@
 
 class DeepArrayPuzzle : public PuzzleBuilder {
 public:
-    DeepArrayPuzzle(uint64_t puzzle_code, llvm::Module &M, std::default_random_engine* rand_eng, int weight = 10)
-            : PuzzleBuilder(puzzle_code, M, weight, rand_eng) {
+    const static int weight;
+    const static std::string id;
+
+    DeepArrayPuzzle() = default;
+
+    DeepArrayPuzzle(uint64_t puzzle_code, llvm::Module *M) : PuzzleBuilder(puzzle_code, M) {
       array_size = static_cast<uint8_t>(puzzle_code % 256);
-//      array_size = 64;
       puzzle_code = puzzle_code >> 8;
       fst_depth = static_cast<uint8_t>(puzzle_code % 256);
-//      fst_depth = 3;
       puzzle_code = puzzle_code >> 8;
       scd_depth = static_cast<uint8_t>(puzzle_code % 256);
-//      scd_depth = 5;
 
+      rand_eng.seed(static_cast<unsigned>(std::chrono::system_clock::now().time_since_epoch().count()));
       llvm::errs() << (int)array_size << "\t" << (int)fst_depth << "\t" << (int)scd_depth << "\n";
     }
 
     llvm::Value *build(SymvarLoc &svs_locs, llvm::Instruction *insert_point) override;
 
+    std::unique_ptr<PuzzleBuilder> clone(uint64_t, llvm::Module*) override;
+
 private:
     uint8_t array_size, fst_depth, scd_depth;
+    std::default_random_engine rand_eng;
 };
 
 
 class BogusCFGTransformer : public Transformer<llvm::Function> {
 public:
-    explicit BogusCFGTransformer(uint64_t trans_code, int weight=10,
-            std::default_random_engine *rand_eng = nullptr) :
-            Transformer(trans_code, weight) {
+    const static int weight;
+    const static std::string id;
+
+    explicit BogusCFGTransformer(uint64_t trans_code) : Transformer(trans_code) {
       obf_prob = static_cast<uint8_t>(trans_code % 256);
       obf_times = static_cast<uint8_t>((trans_code >> 8) % 256);
 
+      rand_eng.seed(static_cast<unsigned >(std::chrono::system_clock::now().time_since_epoch().count()));
       llvm::errs() << int(obf_prob) << "\t" << int(obf_times) << "\n";
-//      obf_prob = 30;
-//      obf_times = 3;
     }
 
     llvm::Function *transform(llvm::Function *F, llvm::Value *predicate) override;
 
+    std::unique_ptr<Transformer<llvm::Function>> clone(uint64_t) override;
+
 private:
     uint8_t obf_prob, obf_times;
+    std::default_random_engine rand_eng;
 };
 
 #endif //PROJECT_INHERITANCE_HPP

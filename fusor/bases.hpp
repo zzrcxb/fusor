@@ -11,6 +11,7 @@
 #include "utils.hpp"
 
 #include <random>
+#include <initializer_list>
 
 
 enum BuilderType {
@@ -22,34 +23,37 @@ enum BuilderType {
 
 class PuzzleBuilder {
 public:
-    int weight;
+    const static int weight;
+    const static std::string id;
 
-    PuzzleBuilder(uint64_t puzzle_code, llvm::Module &M, int weight = 10,
-                  std::default_random_engine *rand_eng = nullptr) :
-            puzzle_code(puzzle_code), module(M), weight(weight), rand_eng(rand_eng) {}
+    PuzzleBuilder() = default;
+
+    PuzzleBuilder(uint64_t puzzle_code, llvm::Module *M) :
+            puzzle_code(puzzle_code), module(M) {}
 
     virtual llvm::Value *build(SymvarLoc &svs_locs, llvm::Instruction *insert_point) = 0;
 
+    virtual std::unique_ptr<PuzzleBuilder> clone(uint64_t, llvm::Module*) = 0;
+
 protected:
-    llvm::Module &module;
-    std::default_random_engine *rand_eng;
+    llvm::Module *module;
     uint64_t puzzle_code;
 };
 
 
 template <typename T> class Transformer {
 public:
-    int weight;
+    const static int weight;
+    const static std::string id;
 
-    explicit Transformer(uint64_t trans_code, int weight = 10,
-            std::default_random_engine *rand_eng = nullptr) :
-            trans_code(trans_code), weight(weight), rand_eng(rand_eng) {}
+    explicit Transformer(uint64_t trans_code) : trans_code(trans_code) {}
 
     virtual T *transform(T *t, llvm::Value *predicate) = 0;
 
+    virtual std::unique_ptr<Transformer<T>> clone(uint64_t) = 0;
+
 protected:
     uint64_t trans_code;
-    std::default_random_engine *rand_eng;
 };
 
 

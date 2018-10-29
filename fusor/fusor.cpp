@@ -5,6 +5,7 @@
 #include "llvm/Support/CommandLine.h"
 #include "utils.hpp"
 #include "inheritance.hpp"
+#include "factories.hpp"
 
 #include <algorithm>
 #include <random>
@@ -69,23 +70,15 @@ namespace {
             auto svs_loc = move_symvar_to_front(sv_bb, sym_vars);
             // after moving, then you can do whatever you want with symvar
 
-            auto *dpap = new DeepArrayPuzzle((uint64_t)328448 + ARRAY_SIZE, M, &rand_engine);
-            auto *predicate =  dpap->build(svs_loc, sv_bb->getTerminator());
+//            auto *dpap = new DeepArrayPuzzle((uint64_t)328448 + ARRAY_SIZE, &M);
+//            auto *predicate =  dpap->build(svs_loc, sv_bb->getTerminator());
+            PuzzleBuilderFactory factory;
+            string id = "DeepArrayPuzzle";
+            auto builder = factory.get_builder(id, (uint64_t)328448 + ARRAY_SIZE, &M);
+            auto *predicate = builder->build(svs_loc, sv_bb->getTerminator());
 //            auto *predicate = puzzle2(sv_bb->getTerminator(), svs_loc);
-            auto *bogus = new BogusCFGTransformer(356, 10, &rand_engine);
+            auto *bogus = new BogusCFGTransformer(356);
             bogus->transform(&F, predicate);
-
-//            auto *puzzle = puzzle2(sv_bb->getTerminator(), svs_loc);
-//            auto *fake = BasicBlock::Create(F.getContext(), "sv_bb", &F);
-//            auto *tailB = BBs.front()->splitBasicBlock(--BBs.front()->end(), "tail");
-//            sv_bb->getTerminator()->eraseFromParent();
-//            BranchInst::Create(BBs.front(), fake, puzzle, sv_bb);
-
-//            ReturnInst::Create(F.getContext(), ConstantInt::get(i32, 1), fake);
-
-//            BranchInst::Create(BBs.front(), fake);
-//            BBs.front()->getTerminator()->eraseFromParent();
-//            BranchInst::Create(tailB, fake, puzzle, BBs.front());
 
             errs() << "====== DONE ======\n";
           }
