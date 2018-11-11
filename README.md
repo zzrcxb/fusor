@@ -27,8 +27,23 @@ make && cd ..
 ```
 
 # How to run
+## Setup environment variable
+To specify the configure file's path, set environment variable `FUSOR_CONFIG`.
+```
+export FUSOR_CONFIG=/path/to/config.json
+```
 
+## Change CFLAGS
 Append `-Xclang -load -Xclang /path/to/libArrayPass.so` to your compiler's flag.
 
-To use `-array_size` option:
-Append `-mllvm -array_size -mllvm (your array size)`
+# Libraries
+The puzzle code or the transformation code is `uint64_t` type.
+## DeepArrayPuzzle
+- ```array size := puzzle_code[63:56]```
+- ```first dimension depth := puzzle_code[55:48]```
+- ```second dimension depth := puzzle_code[47:40]```
+## BogusCFGTransformer
+- ```obfuscation probability := trans_code[64:56]```
+- ```obfuscation times := trans_code[55:48]```
+
+
