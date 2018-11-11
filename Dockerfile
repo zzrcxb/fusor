@@ -10,4 +10,4 @@ RUN apt update && \
 
 RUN cd fusor && mkdir build && cd build && cmake .. && make
 
-
+RUN export FUSOR_CONFIG=/root/fusor/config.json
