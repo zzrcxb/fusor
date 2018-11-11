@@ -6,7 +6,6 @@
 #include "bases.hpp"
 #include "inheritance.hpp"
 
-
 #ifndef PROJECT_FACTORIES_HPP
 #define PROJECT_FACTORIES_HPP
 
@@ -19,11 +18,24 @@ public:
       rand_eng.seed(static_cast<unsigned>(std::chrono::system_clock::now().time_since_epoch().count()));
     }
 
-    std::unique_ptr<PuzzleBuilder> get_builder(std::string &id, uint64_t puzzle_code, llvm::Module *M) {
+    std::unique_ptr<PuzzleBuilder> get_builder(std::string id, uint64_t puzzle_code, llvm::Module *M) {
       return puzzles[id]->clone(puzzle_code, M);
     }
 
-    std::unique_ptr<PuzzleBuilder> get_builder_randomly(uint64_t, llvm::Module&);
+    std::unique_ptr<PuzzleBuilder> get_builder_randomly(std::map<std::string, uint64_t> pc_map, llvm::Module *M) {
+      std::uniform_int_distribution<ulong > ulong_gen(0, puzzles.size() - 1);
+      auto it = pc_map.begin();
+      std::advance(it, ulong_gen(rand_eng));
+      auto key = it->first;
+      auto puzzle_code = it->second;
+
+      if (!IN_MAP(key, puzzles)) {
+        llvm::errs() << "--- Puzzle \"" << key <<"\" not found in PuzzleBuilder ---\n";
+        return nullptr;
+      }
+
+      return get_builder(key, puzzle_code, M);
+    }
 
 private:
     std::map<std::string, std::unique_ptr<PuzzleBuilder>> puzzles;
@@ -39,11 +51,24 @@ public:
       rand_eng.seed(static_cast<unsigned>(std::chrono::system_clock::now().time_since_epoch().count()));
     }
 
-    std::unique_ptr<Transformer<llvm::Function>> get_transformer(std::string &id, uint64_t trans_code) {
+    std::unique_ptr<Transformer<llvm::Function>> get_transformer(std::string id, uint64_t trans_code) {
       return transes[id]->clone(trans_code);
     }
 
-    std::unique_ptr<Transformer<llvm::Function>> get_transformer_randomly();
+    std::unique_ptr<Transformer<llvm::Function>> get_transformer_randomly(std::map<std::string, uint64_t> tc_map) {
+      std::uniform_int_distribution<ulong > ulong_gen(0, transes.size() - 1);
+      auto it = tc_map.begin();
+      std::advance(it, ulong_gen(rand_eng));
+      auto key = it->first;
+      auto puzzle_code = it->second;
+
+      if (!IN_MAP(key, transes)) {
+        llvm::errs() << "--- Transformer \"" << key <<"\" not found in TransformerFactory ---\n";
+        return nullptr;
+      }
+
+      return get_transformer(key, puzzle_code);
+    }
 
 private:
     std::map<std::string, std::unique_ptr<Transformer<llvm::Function>>> transes;

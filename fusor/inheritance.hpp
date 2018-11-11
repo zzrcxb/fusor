@@ -27,7 +27,7 @@ public:
       scd_depth = static_cast<uint8_t>(puzzle_code % 256);
 
       rand_eng.seed(static_cast<unsigned>(std::chrono::system_clock::now().time_since_epoch().count()));
-      llvm::errs() << (int)array_size << "\t" << (int)fst_depth << "\t" << (int)scd_depth << "\n";
+//      llvm::errs() << (int)array_size << "\t" << (int)fst_depth << "\t" << (int)scd_depth << "\n";
     }
 
     llvm::Value *build(SymvarLoc &svs_locs, llvm::Instruction *insert_point) override;
@@ -54,7 +54,7 @@ public:
       obf_times = static_cast<uint8_t>((trans_code >> 8) % 256);
 
       rand_eng.seed(static_cast<unsigned >(std::chrono::system_clock::now().time_since_epoch().count()));
-      llvm::errs() << int(obf_prob) << "\t" << int(obf_times) << "\n";
+//      llvm::errs() << int(obf_prob) << "\t" << int(obf_times) << "\n";
     }
 
     llvm::Function *transform(llvm::Function *F, llvm::Value *predicate) override;

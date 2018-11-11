@@ -24,6 +24,8 @@
 #include <random>
 #include <chrono>
 #include <memory>
+#include <map>
+#include <algorithm>
 
 #define True true
 #define False false // For Python lovers!
@@ -83,7 +85,11 @@ std::vector<llvm::Instruction *> search_symvar_func_call(llvm::Function &F);
 std::vector<SymVar> search_symvar_declare(llvm::Function &F);
 
 
-template <typename T> std::vector<T> range(T start, T end, T step) {
+const SymvarLoc move_symvar_to_front(llvm::BasicBlock *BB, const std::vector<llvm::Value *> &sym_var);
+
+
+template <typename T>
+inline std::vector<T> range(T start, T end, T step) {
   std::vector<T> res;
 
   for (T i = start; step > 0 ? i < end : i > end; i += step) {
@@ -94,12 +100,14 @@ template <typename T> std::vector<T> range(T start, T end, T step) {
 }
 
 
-template <typename T> std::vector<T> range(T start, T end) {
+template <typename T>
+inline std::vector<T> range(T start, T end) {
   return range<T>(start, end, 1);
 }
 
 
-template <typename T> std::vector<T> range(T end) {
+template <typename T>
+inline std::vector<T> range(T end) {
   return range<T>(0, end, 1);
 }
 

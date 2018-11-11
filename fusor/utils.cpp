@@ -4,6 +4,10 @@
 #include "utils.hpp"
 
 
+using namespace std;
+using namespace llvm;
+
+
 std::vector<llvm::Instruction *> search_symvar_func_call(llvm::Function &F) {
   std::vector<llvm::Instruction *> ret_funcs;
   for (auto &B : F) {
@@ -59,4 +63,31 @@ std::map<llvm::Value*, llvm::Value*> cast_sv_to_uint8(SymvarLoc &svs_loc, llvm::
   }
 
   return res;
+}
+
+
+const SymvarLoc move_symvar_to_front(BasicBlock *BB, const vector<Value *> &sym_var) {
+  Instruction *insert_point = dyn_cast<Instruction>(BB->begin());
+  map<Value *, Instruction *> locations;
+
+  for (auto *sv : sym_var) {
+    bool found = False;
+    for (auto &u : sv->uses()) {
+      if (auto *storeI = dyn_cast<StoreInst>(u.getUser())) {
+        if (auto *allocaI = dyn_cast<AllocaInst>(storeI->getOperand(1))) {
+          allocaI->moveBefore(insert_point);
+          storeI->moveBefore(insert_point);
+          locations.insert(pair<Value *, Instruction *>(sv, allocaI));
+          found = true;
+        }
+      }
+    }
+    if (!found) { // Allocate arguments in case compiler gets some of them optimized. Not be tested!!!
+      auto *addr = new AllocaInst(sv->getType(), sv->getName(), insert_point);
+      locations.insert(pair<Value *, Instruction *>(sv, addr));
+      new StoreInst(sv, addr, insert_point);
+    }
+  }
+
+  return locations;
 }
