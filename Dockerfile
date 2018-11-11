@@ -4,9 +4,9 @@ MAINTAINER Neil Zhao, i@zzrcxb.me
 WORKDIR /root/
 
 RUN apt update && \
-    apt install -y build-essential cmake llvm vim git clang python python-pip && \
+    apt install -y build-essential cmake llvm vim git clang python python3-pip && \
     git clone https://github.com/zzrcxb/fusor.git && \
-    pip install angr termcolor
+    pip3 install angr termcolor
 
 RUN cd fusor && mkdir build && cd build && cmake .. && make
 
