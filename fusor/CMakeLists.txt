@@ -9,3 +9,10 @@ target_compile_features(FusorPass PRIVATE cxx_range_for cxx_auto_type)
 set_target_properties(FusorPass PROPERTIES
     COMPILE_FLAGS "-fno-rtti"
 )
+
+if(NOT CMAKE_BUILD_TYPE)
+    set(CMAKE_BUILD_TYPE Release)
+endif()
+
+set(CMAKE_CXX_FLAGS_DEBUG "-g")
+set(CMAKE_CXX_FLAGS_RELEASE "-O3")

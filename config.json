@@ -1,0 +1,14 @@
+{
+  "predicates": [
+    {
+      "name": "DeepArrayPuzzle",
+      "code": 328512
+    }
+  ],
+  "transformations": [
+    {
+      "name": "BogusCFGTransformer",
+      "code": 356
+    }
+  ]
+}
