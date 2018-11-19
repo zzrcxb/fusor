@@ -2,9 +2,9 @@
 // Created by neil on 10/11/18.
 //
 
-#include "../bases.hpp"
-#include "../utils.hpp"
-#include "../inheritance.hpp"
+#include "bases.hpp"
+#include "utils.hpp"
+#include "inheritance.hpp"
 
 #include <random>
 

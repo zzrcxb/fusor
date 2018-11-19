@@ -13,7 +13,8 @@
 class PuzzleBuilderFactory {
 public:
     PuzzleBuilderFactory() {
-      puzzles[DeepArrayPuzzle::id] = std::make_unique<DeepArrayPuzzle>();
+//      puzzles[DeepArrayPuzzle::id] = std::make_unique<DeepArrayPuzzle>();
+      puzzles[FloatPointPuzzle::id] = std::make_unique<FloatPointPuzzle>();
 
       rand_eng.seed(static_cast<unsigned>(std::chrono::system_clock::now().time_since_epoch().count()));
     }

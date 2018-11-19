@@ -2,8 +2,8 @@
 // Created by neil on 10/21/18.
 //
 
-#include "../utils.hpp"
-#include "../inheritance.hpp"
+#include "utils.hpp"
+#include "inheritance.hpp"
 
 
 using namespace std;
