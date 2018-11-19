@@ -40,6 +40,24 @@ private:
 };
 
 
+class FloatPointPuzzle : public PuzzleBuilder {
+public:
+    const static int weight;
+    const static std::string id;
+
+    FloatPointPuzzle() {
+      rand_eng.seed(static_cast<unsigned>(std::chrono::system_clock::now().time_since_epoch().count()));
+    }
+    
+    llvm::Value *build(SymvarLoc &svs_locs, llvm::Instruction *insert_point) override;
+    
+    std::unique_ptr<PuzzleBuilder> clone(uint64_t, llvm::Module*) override;
+
+private:
+    std::default_random_engine rand_eng;
+};
+
+
 class BogusCFGTransformer : public Transformer<llvm::Function> {
 public:
     const static int weight;
