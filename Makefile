@@ -30,3 +30,9 @@ test: pass
 
 clean:
 	rm -f *.bc *.ll *.out *.s *.dot
+
+debug: log.c pass example.c
+	@clang -c log.c
+	@clang -Xclang -load -Xclang build/fusor/libFusorPass.so -c example.c
+	@clang log.o example.o
+	@rm example.o

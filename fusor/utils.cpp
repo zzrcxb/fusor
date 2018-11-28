@@ -56,10 +56,18 @@ std::map<llvm::Value*, llvm::Value*> cast_sv_to_uint8(SymvarLoc &svs_loc, llvm::
   for (auto &p : svs_loc) {
     auto *sv = p.first;
     auto *loc = p.second;
+    Instruction *load;
 
-    auto *btc = irbuilder.CreateBitCast(loc, Int8_ptr, "btc");
-    btc = irbuilder.CreateLoad(btc, "loaded");
-    res.insert(std::pair<llvm::Value*, llvm::Value*>(sv, btc));
+//    if (!sv->getType()->isPointerTy()) {
+      auto *btc = irbuilder.CreateBitCast(loc, Int8_ptr, "btc");
+      load = irbuilder.CreateLoad(btc, "loaded");
+//    }
+//    else {
+//      auto *btc = irbuilder.CreateBitCast(sv, Int8_ptr, "btc");
+//      load = irbuilder.CreateLoad(btc, "loaded");
+//    }
+
+    res.insert(std::pair<llvm::Value*, llvm::Value*>(sv, load));
   }
 
   return res;

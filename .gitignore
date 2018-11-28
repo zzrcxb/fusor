@@ -46,3 +46,6 @@ build/
 *.dot
 *.jpg
 *.png
+
+# Log
+log.c
