@@ -34,7 +34,7 @@ export FUSOR_CONFIG=/path/to/config.json
 ```
 
 ## Change CFLAGS
-Append `-Xclang -load -Xclang /path/to/libArrayPass.so` to your compiler's flag.
+Append `-Xclang -load -Xclang /path/to/libFusorPass.so` to your compiler's flag.
 
 # Libraries
 The puzzle code or the transformation code is `uint64_t` type.
