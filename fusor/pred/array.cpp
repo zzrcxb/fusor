@@ -13,7 +13,6 @@ using namespace llvm;
 
 
 const string DeepArrayPuzzle::id = "DeepArrayPuzzle";
-const int DeepArrayPuzzle::weight = 10;
 
 Constant *build_log(string name, Module *M) {
   vector<Type*> paramTypes = {Int8, };

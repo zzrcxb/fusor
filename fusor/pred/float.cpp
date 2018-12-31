@@ -11,8 +11,8 @@
 using namespace std;
 using namespace llvm;
 
+
 const string FloatPointPuzzle::id = "FloatPointPuzzle";
-const int FloatPointPuzzle::weight = 10;
 
 Value * FloatPointPuzzle::build(SymvarLoc &svs_locs, Instruction *insert_point) {
   if (!insert_point)
