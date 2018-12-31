@@ -12,7 +12,6 @@
 
 class DeepArrayPuzzle : public PuzzleBuilder {
 public:
-    const static int weight;
     const static std::string id;
 
     DeepArrayPuzzle() {
@@ -42,7 +41,6 @@ private:
 
 class FloatPointPuzzle : public PuzzleBuilder {
 public:
-    const static int weight;
     const static std::string id;
 
     FloatPointPuzzle() = default;
@@ -64,7 +62,6 @@ private:
 
 class BogusCFGTransformer : public Transformer<llvm::Function> {
 public:
-    const static int weight;
     const static std::string id;
 
     BogusCFGTransformer() {
@@ -86,6 +83,20 @@ public:
 private:
     uint8_t obf_prob, obf_times;
     std::default_random_engine rand_eng;
+};
+
+
+class SecondOpaqueTransformer : public Transformer<llvm::Function> {
+public:
+    const static std::string id;
+
+    SecondOpaqueTransformer() = default;
+
+    explicit SecondOpaqueTransformer(uint64_t trans_code) : Transformer(trans_code) {}
+
+    llvm::Function *transform(llvm::Function *F, llvm::Value *predicate) override;
+
+    std::unique_ptr<Transformer<llvm::Function>> clone(uint64_t) override;
 };
 
 #endif //PROJECT_INHERITANCE_HPP
