@@ -2,7 +2,7 @@
   "predicates": [
     {
       "name": "FloatPointPuzzle",
-      "code": 328512,
+      "code": 328576,
       "weight": 100
     }
   ],
@@ -10,6 +10,11 @@
     {
       "name": "BogusCFGTransformer",
       "code": 356,
+      "weight": 100
+    },
+    {
+      "name": "SecondOpaqueTransformer",
+      "code": "",
       "weight": 100
     }
   ]
