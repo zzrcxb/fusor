@@ -49,6 +49,7 @@ public:
     FunctionTransformerFactory() {
       transes[BogusCFGTransformer::id] = std::make_unique<BogusCFGTransformer>();
       transes[SecondOpaqueTransformer::id] = std::make_unique<SecondOpaqueTransformer>();
+      transes[CFGFlattenTransformer::id] = std::make_unique<CFGFlattenTransformer>();
 
       rand_eng.seed(static_cast<unsigned>(std::chrono::system_clock::now().time_since_epoch().count()));
     }

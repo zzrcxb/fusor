@@ -73,7 +73,6 @@ public:
       obf_times = static_cast<uint8_t>((trans_code >> 8) % 256);
 
       rand_eng.seed(static_cast<unsigned >(std::chrono::system_clock::now().time_since_epoch().count()));
-//      llvm::errs() << int(obf_prob) << "\t" << int(obf_times) << "\n";
     }
 
     llvm::Function *transform(llvm::Function *F, llvm::Value *predicate) override;
@@ -93,6 +92,20 @@ public:
     SecondOpaqueTransformer() = default;
 
     explicit SecondOpaqueTransformer(uint64_t trans_code) : Transformer(trans_code) {}
+
+    llvm::Function *transform(llvm::Function *F, llvm::Value *predicate) override;
+
+    std::unique_ptr<Transformer<llvm::Function>> clone(uint64_t) override;
+};
+
+
+class CFGFlattenTransformer : public Transformer<llvm::Function> {
+public:
+    const static std::string id;
+
+    CFGFlattenTransformer() = default;
+
+    explicit CFGFlattenTransformer(uint64_t trans_code) : Transformer(trans_code) {}
 
     llvm::Function *transform(llvm::Function *F, llvm::Value *predicate) override;
 
