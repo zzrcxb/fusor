@@ -85,14 +85,14 @@ const SymvarLoc move_symvar_to_front(BasicBlock *BB, const vector<Value *> &sym_
         if (auto *allocaI = dyn_cast<AllocaInst>(storeI->getOperand(1))) {
           allocaI->moveBefore(insert_point);
           storeI->moveBefore(insert_point);
-          locations.insert(pair<Value *, Instruction *>(sv, allocaI));
+          locations[sv] = allocaI;
           found = true;
         }
       }
     }
     if (!found) { // Allocate arguments in case compiler gets some of them optimized. Not be tested!!!
       auto *addr = new AllocaInst(sv->getType(), sv->getName(), insert_point);
-      locations.insert(pair<Value *, Instruction *>(sv, addr));
+      locations[sv] = addr;
       new StoreInst(sv, addr, insert_point);
     }
   }

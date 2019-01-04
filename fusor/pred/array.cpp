@@ -14,13 +14,13 @@ using namespace llvm;
 
 const string DeepArrayPuzzle::id = "DeepArrayPuzzle";
 
-Constant *build_log(string name, Module *M) {
-  vector<Type*> paramTypes = {Int8, };
-  auto *retType = Void;
-  FunctionType *logFuncType = FunctionType::get(retType, paramTypes, False);
-  Constant *logFunc = M->getOrInsertFunction(name, logFuncType);
-  return logFunc;
-}
+//Constant *build_log(string &name, Module *M) {
+//  vector<Type*> paramTypes = {Int8, };
+//  auto *retType = Void;
+//  FunctionType *logFuncType = FunctionType::get(retType, paramTypes, False);
+//  Constant *logFunc = M->getOrInsertFunction(name, logFuncType);
+//  return logFunc;
+//}
 
 
 Value* DeepArrayPuzzle::build(SymvarLoc &svs_locs, Instruction* insert_point) {
