@@ -50,6 +50,7 @@ namespace {
           }
 
           for (auto &F : M) {
+            // ignore declaration
             if (F.isDeclaration())
               continue;
             

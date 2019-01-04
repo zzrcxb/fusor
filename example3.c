@@ -4,16 +4,17 @@ int test(char* str) {
   char res = str[0] - '0';
 
   if (res > 5) {
+    int a = 0;
+    if (res > 10) {
+      a = 6;
+    }
     printf("This is branch I\n");
-    res = 3;
+    return 3;
   }
   else {
     printf("This is branch II\n");
-    res = 0;
+    return 0;
   }
-  
-  printf("%d\n", res);
-  return res;
 }
 
 

@@ -2,7 +2,10 @@ pass:
 	@cd build && cmake .. && make -j2
 
 opt: rebuild
-	@opt-3.8 -load build/fusor/libFusorPass.so -fusor example.bc | llvm-dis-3.8 | tee out.ll
+	@opt-3.8 -load build/fusor/libFusorPass.so -fusor example.ll | llvm-dis-3.8 | tee out.ll
+
+cfg: opt
+	@opt-3.8 -dot-cfg out.ll > /dev/null
 
 assembly:
 	@llc-3.8 out.ll && clang out.s
