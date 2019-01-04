@@ -35,7 +35,6 @@ Type* Double = llvm::Type::getDoubleTy(llvm::getGlobalContext());
 Type* Double_ptr = llvm::Type::getDoublePtrTy(llvm::getGlobalContext());
 Type* Void = llvm::Type::getVoidTy(getGlobalContext());
 
-
 using json = nlohmann::json;
 
 namespace {
@@ -87,6 +86,18 @@ namespace {
               exit(1);
             }
             auto *predicate = pz_builder->build(svs_loc, sv_bb->getTerminator());
+
+            // merge sv bb
+            sv_bb->getTerminator()->eraseFromParent();
+            auto *merge_point = ISINSTANCE(BBs.front()->getFirstInsertionPt(), Instruction);
+            vector<Instruction*> backup_ins_sv;
+            for (auto &I : *sv_bb) {
+              backup_ins_sv.emplace_back(&I);
+            }
+            for (auto *I : backup_ins_sv) {
+              I->moveBefore(merge_point);
+            }
+            sv_bb->eraseFromParent();
 
             auto tr_builder = tr_factory.get_transformer_randomly(trans_conf);
             if (tr_builder == nullptr) {
