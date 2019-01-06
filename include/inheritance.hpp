@@ -112,4 +112,23 @@ public:
     std::unique_ptr<Transformer<llvm::Function>> clone(uint64_t) override;
 };
 
+
+class DataFlowTransformer : public Transformer<llvm::Function> {
+public:
+    const static std::string id;
+
+    DataFlowTransformer() = default;
+
+    explicit DataFlowTransformer(uint64_t trans_code) : Transformer(trans_code) {
+      rand_eng.seed(static_cast<unsigned >(std::chrono::system_clock::now().time_since_epoch().count()));
+    }
+
+    llvm::Function *transform(llvm::Function *F, llvm::Value *predicate) override;
+
+    std::unique_ptr<Transformer<llvm::Function>> clone(uint64_t) override;
+
+private:
+    std::default_random_engine rand_eng;
+};
+
 #endif //PROJECT_INHERITANCE_HPP

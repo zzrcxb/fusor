@@ -8,7 +8,7 @@
   ],
   "transformations": [
     {
-      "name": "CFGFlattenTransformer",
+      "name": "DataFlowTransformer",
       "code": 356,
       "weight": 100
     }

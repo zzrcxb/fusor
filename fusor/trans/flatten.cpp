@@ -4,7 +4,6 @@
 
 #include "utils.hpp"
 #include "inheritance.hpp"
-#include "llvm/Transforms/Scalar.h"
 
 using namespace std;
 using namespace llvm;
@@ -35,9 +34,6 @@ Function *CFGFlattenTransformer::transform(Function *F, Value *predicate) {
     if (ISINSTANCE(b->getTerminator(), InvokeInst))
       return F;
   }
-
-//  FunctionPass *lower = createLowerSwitchPass();
-//  lower->runOnFunction(*F);
 
   // create inf loop entry
   auto *entry_BB = BasicBlock::Create(F->getContext(), "entry", F);
