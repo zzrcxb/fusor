@@ -60,30 +60,45 @@ Function *DataFlowTransformer::transform(Function *F, Value *predicate) {
   for (auto *gv : gvs) {
     for (auto u : gv->users()) {
       if (auto *expr = ISINSTANCE(u, ConstantExpr)) {
-        for (auto u2 : expr->users()) {
-          if (auto *ins = ISINSTANCE(u2, Instruction)) {
-            if (ins->getParent()->getParent() == F) {
-              irbuilder.SetInsertPoint(ins);
-              auto actual_index = static_cast<uint32_t >(gv_map[gv]) ^ true_offset;
-              auto *saved_select = irbuilder.CreateLoad(offset_ptr);
+        if (expr->isGEPWithNoNotionalOverIndexing()) {
+          for (auto u2 : expr->users()) {
+            if (auto *ins = ISINSTANCE(u2, Instruction)) {
+              if (ins->getParent()->getParent() == F && expr->getNumOperands() == 3 && ISINSTANCE(ins, PHINode) ==
+                                                                                               nullptr) {
+                irbuilder.SetInsertPoint(ins);
+                auto actual_index = static_cast<uint32_t >(gv_map[gv]) ^ true_offset;
+                auto *saved_select = irbuilder.CreateLoad(offset_ptr);
 
-              auto *load_index = irbuilder.CreateXor(ConstantInt::get(Int32, actual_index), saved_select);
-              Value *idx[2] = {ConstantInt::get(Int32, 0), load_index};
-              auto *str_ptr_ptr = irbuilder.CreateInBoundsGEP(str_mapper, ArrayRef<Value *>(idx, 2));
-              auto *str_ptr = irbuilder.CreateLoad(str_ptr_ptr);
+                auto *load_index = irbuilder.CreateXor(ConstantInt::get(Int32, actual_index), saved_select);
+                Value *idx[2] = {ConstantInt::get(Int32, 0), load_index};
+                auto *str_ptr_ptr = irbuilder.CreateInBoundsGEP(str_mapper, ArrayRef<Value *>(idx, 2));
+                auto *str_ptr = irbuilder.CreateLoad(str_ptr_ptr);
+                idx[0] = expr->getOperand(2);
+//                errs() << *expr->getOperand(1) << "\n";
+                auto *moved_ptr = irbuilder.CreateInBoundsGEP(str_ptr, ArrayRef<Value *>(idx, 1));
 
-              ins->replaceUsesOfWith(u, str_ptr);
+                ins->replaceUsesOfWith(u, moved_ptr);
+              }
             }
           }
         }
-      }
-      else if (auto *ins = ISINSTANCE(u, GetElementPtrInst)) {
-        errs() << "true2\n";
-      }
+      } // else if (auto *ins = ISINSTANCE(u, GetElementPtrInst)) {
+//        if (ins->getNumIndices() == 2 && ins->getParent()->getParent() == F) {
+//          irbuilder.SetInsertPoint(ins);
+//          auto actual_index = static_cast<uint32_t >(gv_map[gv]) ^true_offset;
+//          auto *saved_select = irbuilder.CreateLoad(offset_ptr);
+//          auto *load_index = irbuilder.CreateXor(ConstantInt::get(Int32, actual_index), saved_select);
+//          Value *idx[2] = {ConstantInt::get(Int32, 0), load_index};
+//          auto *str_ptr_ptr = irbuilder.CreateInBoundsGEP(str_mapper, ArrayRef<Value *>(idx, 2));
+//          auto *str_ptr = irbuilder.CreateLoad(str_ptr_ptr);
+//          idx[0] = ins->getOperand(2);
+//          auto *moved_ptr = irbuilder.CreateInBoundsGEP(str_ptr, ArrayRef<Value *>(idx, 1));
+//          ins->replaceAllUsesWith(moved_ptr);
+//          errs() << *ins->getOperand(1) << "\n";
+//        }
+//      }
     }
   }
-
-  errs() << "Random mask = " << true_offset << "\n";
 
 //  F->dump();
   return F;
