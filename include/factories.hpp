@@ -14,6 +14,7 @@ class PuzzleBuilderFactory {
 public:
     PuzzleBuilderFactory() {
       puzzles[DeepArrayPuzzle::id] = std::make_unique<DeepArrayPuzzle>();
+      puzzles[FloatPointPuzzle::id] = std::make_unique<FloatPointPuzzle>();
 
       rand_eng.seed(static_cast<unsigned>(std::chrono::system_clock::now().time_since_epoch().count()));
     }
@@ -23,7 +24,7 @@ public:
     }
 
     std::unique_ptr<PuzzleBuilder> get_builder_randomly(std::map<std::string, uint64_t> pc_map, llvm::Module *M) {
-      std::uniform_int_distribution<ulong > ulong_gen(0, puzzles.size() - 1);
+      std::uniform_int_distribution<ulong > ulong_gen(0, pc_map.size() - 1);
       auto it = pc_map.begin();
       std::advance(it, ulong_gen(rand_eng));
       auto key = it->first;
@@ -47,6 +48,9 @@ class FunctionTransformerFactory {
 public:
     FunctionTransformerFactory() {
       transes[BogusCFGTransformer::id] = std::make_unique<BogusCFGTransformer>();
+      transes[SecondOpaqueTransformer::id] = std::make_unique<SecondOpaqueTransformer>();
+      transes[CFGFlattenTransformer::id] = std::make_unique<CFGFlattenTransformer>();
+      transes[DataFlowTransformer::id] = std::make_unique<DataFlowTransformer>();
 
       rand_eng.seed(static_cast<unsigned>(std::chrono::system_clock::now().time_since_epoch().count()));
     }
@@ -56,7 +60,7 @@ public:
     }
 
     std::unique_ptr<Transformer<llvm::Function>> get_transformer_randomly(std::map<std::string, uint64_t> tc_map) {
-      std::uniform_int_distribution<ulong > ulong_gen(0, transes.size() - 1);
+      std::uniform_int_distribution<ulong > ulong_gen(0, tc_map.size() - 1);
       auto it = tc_map.begin();
       std::advance(it, ulong_gen(rand_eng));
       auto key = it->first;

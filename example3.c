@@ -2,21 +2,19 @@
 
 int test(char* str) {
   char res = str[0] - '0';
-  char test[20] = "test string";
-  char *br1 = "ABCThis is branch I";
 
   if (res > 5) {
-    printf("%s\n", br1 + 3);
-    res = 3;
-    test[1] = 'c';
+    int a = 0;
+    if (res > 10) {
+      a = 6;
+    }
+    printf("This is branch I\n");
+    return 3;
   }
   else {
     printf("This is branch II\n");
-    res = 0;
+    return 0;
   }
-  
-  printf("%d\n%s\n", res, test);
-  return res;
 }
 
 

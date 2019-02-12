@@ -1,14 +1,16 @@
 {
   "predicates": [
     {
-      "name": "DeepArrayPuzzle",
-      "code": 328512
+      "name": "FloatPointPuzzle",
+      "code": 328576,
+      "weight": 100
     }
   ],
   "transformations": [
     {
-      "name": "BogusCFGTransformer",
-      "code": 356
+      "name": "DataFlowTransformer",
+      "code": 356,
+      "weight": 100
     }
   ]
 }

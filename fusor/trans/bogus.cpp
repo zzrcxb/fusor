@@ -2,8 +2,8 @@
 // Created by neil on 10/21/18.
 //
 
-#include "../utils.hpp"
-#include "../inheritance.hpp"
+#include "utils.hpp"
+#include "inheritance.hpp"
 
 
 using namespace std;
@@ -11,7 +11,6 @@ using namespace llvm;
 
 
 const string BogusCFGTransformer::id = "BogusCFGTransformer";
-const int BogusCFGTransformer::weight = 10;
 
 Function *BogusCFGTransformer::transform(llvm::Function *F, llvm::Value *predicate) {
   uniform_int_distribution<uint8_t> i8_generator(0, 99);

@@ -2,9 +2,9 @@
 // Created by neil on 10/11/18.
 //
 
-#include "../bases.hpp"
-#include "../utils.hpp"
-#include "../inheritance.hpp"
+#include "bases.hpp"
+#include "utils.hpp"
+#include "inheritance.hpp"
 
 #include <random>
 
@@ -13,15 +13,14 @@ using namespace llvm;
 
 
 const string DeepArrayPuzzle::id = "DeepArrayPuzzle";
-const int DeepArrayPuzzle::weight = 10;
 
-Constant *build_log(string name, Module *M) {
-  vector<Type*> paramTypes = {Int8, };
-  auto *retType = Void;
-  FunctionType *logFuncType = FunctionType::get(retType, paramTypes, False);
-  Constant *logFunc = M->getOrInsertFunction(name, logFuncType);
-  return logFunc;
-}
+//Constant *build_log(string &name, Module *M) {
+//  vector<Type*> paramTypes = {Int8, };
+//  auto *retType = Void;
+//  FunctionType *logFuncType = FunctionType::get(retType, paramTypes, False);
+//  Constant *logFunc = M->getOrInsertFunction(name, logFuncType);
+//  return logFunc;
+//}
 
 
 Value* DeepArrayPuzzle::build(SymvarLoc &svs_locs, Instruction* insert_point) {

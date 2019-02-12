@@ -16,7 +16,6 @@
 
 class PuzzleBuilder {
 public:
-    const static int weight;
     const static std::string id;
 
     PuzzleBuilder() {
@@ -39,7 +38,6 @@ protected:
 
 template <typename T> class Transformer {
 public:
-    const static int weight;
     const static std::string id;
 
     Transformer() {
