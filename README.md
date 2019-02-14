@@ -3,6 +3,8 @@ Obfuscator based on logic-bombs
 
 **Tested on llvm-3.8, Debian 9.x**
 
+**This project is still under heavy development**
+
 # Using Docker (Recommended)
 How to install [Docker](https://docs.docker.com/install/).
 ## Pull from Docker Hub
