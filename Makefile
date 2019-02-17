@@ -18,9 +18,9 @@ full: pass example.c
 	@clang -Xclang -load -Xclang build/fusor/libFusorPass.so example.c
 
 test: pass
-	@for dir in $$(ls test); do \
+	@for dir in $$(ls tests); do \
 		echo "\n================ Testing $$dir ================"; \
-		cd test/$$dir && make >/dev/null 2>/dev/null; \
+		cd tests/$$dir && make >/dev/null 2>/dev/null; \
 		./$$dir > $$dir.txt && ./fusor > fusor.txt;\
 		if [ $$(diff $$dir.txt fusor.txt | wc -c) != 0 ]; then \
 			echo "---------------- $$dir FAIL ----------------";\
