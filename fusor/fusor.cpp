@@ -66,7 +66,7 @@ namespace {
               sym_vars.emplace_back(&a);
 
             if (sym_vars.empty()) // nothing will be changed if this function's arg list is empty
-              return False;
+              continue;
 
             for (auto &B : F)
               BBs.emplace_back(&B);
