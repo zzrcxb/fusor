@@ -18,22 +18,21 @@
 using namespace std;
 using namespace llvm;
 
-
-Type* Int1 = llvm::Type::getInt1Ty(llvm::getGlobalContext());
-Type* Int1_ptr = llvm::Type::getInt1PtrTy(llvm::getGlobalContext());
-Type* Int8 = llvm::Type::getInt8Ty(llvm::getGlobalContext());
-Type* Int8_ptr = llvm::Type::getInt8PtrTy(llvm::getGlobalContext());
-Type* Int16 = llvm::Type::getInt16Ty(llvm::getGlobalContext());
-Type* Int16_ptr = llvm::Type::getInt16PtrTy(llvm::getGlobalContext());
-Type* Int32 = llvm::Type::getInt32Ty(llvm::getGlobalContext());
-Type* Int32_ptr = llvm::Type::getInt32PtrTy(llvm::getGlobalContext());
-Type* Int64 = llvm::Type::getInt64Ty(llvm::getGlobalContext());
-Type* Int64_ptr = llvm::Type::getInt64PtrTy(llvm::getGlobalContext());
-Type* Float = llvm::Type::getFloatTy(llvm::getGlobalContext());
-Type* Float_ptr = llvm::Type::getFloatPtrTy(llvm::getGlobalContext());
-Type* Double = llvm::Type::getDoubleTy(llvm::getGlobalContext());
-Type* Double_ptr = llvm::Type::getDoublePtrTy(llvm::getGlobalContext());
-Type* Void = llvm::Type::getVoidTy(getGlobalContext());
+Type* Int1 = NULL;
+Type* Int1_ptr = NULL;
+Type* Int8 = NULL;
+Type* Int8_ptr = NULL;
+Type* Int16 = NULL;
+Type* Int16_ptr = NULL;
+Type* Int32 = NULL;
+Type* Int32_ptr = NULL;
+Type* Int64 = NULL;
+Type* Int64_ptr = NULL;
+Type* Float = NULL;
+Type* Float_ptr = NULL;
+Type* Double = NULL;
+Type* Double_ptr = NULL;
+Type* Void = NULL;
 
 using json = nlohmann::json;
 
@@ -44,6 +43,22 @@ namespace {
         FusorPass() : ModulePass(ID) {}
 
         bool runOnModule(Module &M) override {
+          Int1 = llvm::Type::getInt1Ty(M.getContext());
+          Int1_ptr = llvm::Type::getInt1PtrTy(M.getContext());
+          Int8 = llvm::Type::getInt8Ty(M.getContext());
+          Int8_ptr = llvm::Type::getInt8PtrTy(M.getContext());
+          Int16 = llvm::Type::getInt16Ty(M.getContext());
+          Int16_ptr = llvm::Type::getInt16PtrTy(M.getContext());
+          Int32 = llvm::Type::getInt32Ty(M.getContext());
+          Int32_ptr = llvm::Type::getInt32PtrTy(M.getContext());
+          Int64 = llvm::Type::getInt64Ty(M.getContext());
+          Int64_ptr = llvm::Type::getInt64PtrTy(M.getContext());
+          Float = llvm::Type::getFloatTy(M.getContext());
+          Float_ptr = llvm::Type::getFloatPtrTy(M.getContext());
+          Double = llvm::Type::getDoubleTy(M.getContext());
+          Double_ptr = llvm::Type::getDoublePtrTy(M.getContext());
+          Void = llvm::Type::getVoidTy(M.getContext());
+
           if (!load_config()) {
             errs() << "[Error] Fail to load configuration file, exiting...\n\n";
             exit(1);
@@ -59,7 +74,7 @@ namespace {
 
             rand_engine.seed(++seed);
 
-            errs() << "Obfuscating \"" << F.getName() << "\"\n";
+            outs() << "Obfuscating \"" << F.getName() << "\"\n";
 
             // Initialize
             for (auto &a : F.args())
@@ -107,7 +122,7 @@ namespace {
             }
             tr_builder->transform(&F, predicate);
 
-            errs() << "====== DONE ======\n";
+            outs() << "====== DONE ======\n";
           }
 
           return True;

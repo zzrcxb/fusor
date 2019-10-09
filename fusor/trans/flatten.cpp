@@ -12,9 +12,9 @@ const string CFGFlattenTransformer::id = "CFGFlattenTransformer";
 
 Constant *build_log(string name, Module *M) {
   vector<Type *> paramTypes = {Int64,};
-  auto *retType = Void;
+  auto *retType = llvm::Type::getVoidTy(M->getContext());
   FunctionType *logFuncType = FunctionType::get(retType, paramTypes, False);
-  Constant *logFunc = M->getOrInsertFunction(name, logFuncType);
+  Constant *logFunc = cast<Function>(M->getOrInsertFunction(name, logFuncType).getCallee());
   return logFunc;
 }
 
@@ -126,7 +126,7 @@ Function *CFGFlattenTransformer::transform(Function *F, Value *predicate) {
     for (auto *I : insts) {
       if (auto *phi = ISINSTANCE(I, PHINode)) {
         auto *phi_type = phi->getType();
-        auto *phi_reload_var = new AllocaInst(phi_type, "reload", first_BB->getTerminator());
+        auto *phi_reload_var = new AllocaInst(phi_type, NULL, "reload", first_BB->getTerminator());
         for (auto index : range<uint>(phi->getNumIncomingValues())) {
           auto *incoming_bb = phi->getIncomingBlock(index);
           auto *incoming_v = phi->getIncomingValue(index);
