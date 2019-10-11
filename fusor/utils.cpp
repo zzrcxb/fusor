@@ -91,7 +91,7 @@ const SymvarLoc move_symvar_to_front(BasicBlock *BB, const vector<Value *> &sym_
       }
     }
     if (!found) { // Allocate arguments in case compiler gets some of them optimized. Not be tested!!!
-      auto *addr = new AllocaInst(sv->getType(), sv->getName(), insert_point);
+      auto *addr = new AllocaInst(sv->getType(), NULL, sv->getName(), insert_point);
       locations[sv] = addr;
       new StoreInst(sv, addr, insert_point);
     }
