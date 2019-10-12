@@ -48,4 +48,5 @@ The puzzle code or the transformation code is `uint64_t` type.
 - ```obfuscation probability := trans_code[64:56]```
 - ```obfuscation times := trans_code[55:48]```
 
-
+# LLVM10 Compatibility
+Please checkout to branch [`llvm-10`](https://github.com/zzrcxb/fusor/tree/llvm-10) for an LLVM10 compatible version. Thanks for [@strazzere](https://github.com/strazzere)'s contribution!
